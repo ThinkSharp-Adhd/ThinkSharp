@@ -1,248 +1,206 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>FocusFlow - ADHD Focus App</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<style>
+  * {
+    box-sizing: border-box;
+  }
 
-    html, body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #0f0f0f;
-      color: #fff;
-      height: 100%;
-      width: 100%;
-    }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
 
+  #app {
+    width: 100%;
+    max-width: 750px;
+    transform: scale(1);
+    transition: transform 0.3s ease-in-out;
+  }
+
+  @media (max-width: 768px) {
     #app {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .loader {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      animation: fadeOut 1s ease 2.5s forwards;
-    }
-
-    .dot {
-      width: 20px;
-      height: 20px;
-      margin: 5px;
-      border-radius: 50%;
-      background-color: #00ffcc;
-      animation: bounce 0.6s infinite alternate;
-    }
-
-    .dot:nth-child(2) {
-      animation-delay: 0.2s;
-    }
-
-    .dot:nth-child(3) {
-      animation-delay: 0.4s;
-    }
-
-    @keyframes bounce {
-      to {
-        transform: translateY(-15px);
-      }
-    }
-
-    @keyframes fadeOut {
-      to {
-        opacity: 0;
-        pointer-events: none;
-      }
-    }
-
-    .quiz-container {
-      width: 100%;
-      max-width: 700px;
-      background: #1a1a1a;
-      padding: 5vw;
-      border-radius: 12px;
-      box-shadow: 0 0 25px rgba(0, 255, 204, 0.2);
-    }
-
-    .question {
-      margin-bottom: 40px;
-    }
-
-    .question p {
-      font-size: clamp(16px, 2vw, 20px);
-      text-align: center;
-    }
-
-    .options {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-
-    .circle {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: 3px solid;
-      cursor: pointer;
-      transition: transform 0.2s, border-width 0.2s;
-    }
-
-    .circle:hover {
       transform: scale(1.1);
     }
+  }
 
-    .circle.selected {
-      border-width: 5px;
+  @media (max-width: 480px) {
+    #app {
+      transform: scale(1.2);
     }
+  }
 
-    .disagree1 { border-color: #ff7a00; }
-    .disagree2 { border-color: #ffaa00; }
-    .neutral   { border-color: #00ff00; }
-    .agree1    { border-color: #ff66cc; }
-    .agree2    { border-color: #ff3399; }
+  .loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: fadeOut 1s ease 2.5s forwards;
+  }
 
-    .labels {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 8px;
-      font-size: clamp(12px, 1.5vw, 14px);
-      padding: 0 10%;
-      color: #aaa;
+  .dot {
+    width: 20px;
+    height: 20px;
+    margin: 5px;
+    border-radius: 50%;
+    background-color: #00ffd5;
+    animation: bounce 0.6s infinite alternate;
+    box-shadow: 0 0 10px #00ffd5;
+  }
+
+  .dot:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .dot:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  @keyframes bounce {
+    to {
+      transform: translateY(-15px);
     }
+  }
 
-    .quiz-result {
-      text-align: center;
-      font-size: clamp(18px, 2vw, 22px);
-      margin-top: 30px;
-      color: #00ffcc;
+  @keyframes fadeOut {
+    to {
+      opacity: 0;
+      pointer-events: none;
     }
+  }
 
-    button {
-      padding: 12px 30px;
-      background: #00ffcc;
-      border: none;
-      border-radius: 8px;
-      color: #000;
-      font-size: 16px;
-      cursor: pointer;
-      display: block;
-      margin: 20px auto 0;
+  .quiz-container {
+    background: rgba(25, 25, 25, 0.9);
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 0 30px rgba(0, 255, 204, 0.25);
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+  }
+
+  .question {
+    margin-bottom: 40px;
+    animation: fadeInUp 0.5s ease both;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
     }
-
-    @media (max-width: 600px) {
-      .circle {
-        width: 35px;
-        height: 35px;
-      }
-
-      .quiz-container {
-        padding: 6vw 4vw;
-      }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
-  </style>
-</head>
-<body>
-  <div id="app">
-    <div class="loader" id="loader">
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <p style="margin-top: 10px;">Loading your focus zone...</p>
-    </div>
-  </div>
+  }
 
-  <script>
-    const quizQuestions = [
-      { q: 'I frequently make typos, miscalculations, or other careless errors at work.' },
-      { q: 'I struggle to maintain attention on tasks or conversations.' },
-      { q: 'My mind often feels like it\'s racing with thoughts.' },
-      { q: 'I tend to procrastinate important tasks until the last minute.' },
-      { q: 'I often feel overwhelmed by routine responsibilities.' },
-      { q: 'I have difficulty organizing tasks and managing time effectively.' },
-    ];
+  .question p {
+    font-size: 20px;
+    text-align: center;
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
 
-    function showQuiz() {
-      const app = document.getElementById('app');
-      app.innerHTML = '<div class="quiz-container" id="quiz"></div>';
-      const container = document.getElementById('quiz');
-      let answers = [];
+  .options {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
 
-      quizQuestions.forEach((item, index) => {
-        const qDiv = document.createElement('div');
-        qDiv.className = 'question';
-        qDiv.innerHTML = `
-          <p>${index + 1}. ${item.q}</p>
-          <div class="options" data-index="${index}">
-            <div class="circle disagree1" data-value="1"></div>
-            <div class="circle disagree2" data-value="2"></div>
-            <div class="circle neutral" data-value="3"></div>
-            <div class="circle agree1" data-value="4"></div>
-            <div class="circle agree2" data-value="5"></div>
-          </div>
-          <div class="labels">
-            <span>DISAGREE</span>
-            <span>AGREE</span>
-          </div>
-        `;
-        container.appendChild(qDiv);
-      });
+  .circle {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 3px solid;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.3s ease, border-width 0.2s ease;
+    box-shadow: 0 0 8px transparent;
+  }
 
-      const optionGroups = document.querySelectorAll('.options');
-      optionGroups.forEach(group => {
-        group.addEventListener('click', e => {
-          if (e.target.classList.contains('circle')) {
-            const value = parseInt(e.target.dataset.value);
-            const qIndex = parseInt(group.dataset.index);
-            answers[qIndex] = value;
+  .circle:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 12px #fff;
+  }
 
-            group.querySelectorAll('.circle').forEach(c => c.classList.remove('selected'));
-            e.target.classList.add('selected');
-          }
-        });
-      });
+  .circle.selected {
+    border-width: 5px;
+    box-shadow: 0 0 15px currentColor;
+  }
 
-      const submitBtn = document.createElement('button');
-      submitBtn.textContent = 'Submit';
-      submitBtn.onclick = () => {
-        if (answers.length !== quizQuestions.length || answers.includes(undefined)) {
-          alert('Please answer all questions.');
-          return;
-        }
-        const score = answers.reduce((a, b) => a + b, 0);
-        const avg = score / answers.length;
-        let level = 'Low';
-        if (avg >= 4) level = 'High';
-        else if (avg >= 2.6) level = 'Moderate';
+  .disagree1 {
+    border-color: #ff3b3b;
+    background: radial-gradient(circle, #ff3b3b 40%, #8b0000);
+  }
 
-        container.innerHTML = "<div class='quiz-result'>Your ADHD focus level: <strong>" + level + "</strong></div>";
-        localStorage.setItem('hasVisited', 'true');
-        localStorage.setItem('focusLevel', level);
-      };
-      container.appendChild(submitBtn);
+  .disagree2 {
+    border-color: #ff9900;
+    background: radial-gradient(circle, #ff9900 40%, #cc5500);
+  }
+
+  .neutral {
+    border-color: #00ccff;
+    background: radial-gradient(circle, #00ccff 40%, #006699);
+  }
+
+  .agree1 {
+    border-color: #a766ff;
+    background: radial-gradient(circle, #a766ff 40%, #5b00b5);
+  }
+
+  .agree2 {
+    border-color: #ff3ec8;
+    background: radial-gradient(circle, #ff3ec8 40%, #a60073);
+  }
+
+  .labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 14px;
+    padding: 0 25px;
+    color: #ccc;
+  }
+
+  .quiz-result {
+    text-align: center;
+    font-size: 22px;
+    margin-top: 30px;
+    color: #00ffcc;
+    animation: fadeIn 1s ease forwards;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
     }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        const visited = localStorage.getItem('hasVisited');
-        if (!visited) {
-          showQuiz();
-        } else {
-          document.getElementById('app').innerHTML = "<div class='quiz-result'>Welcome back! Focus level: <strong>" + localStorage.getItem('focusLevel') + "</strong></div>";
-        }
-      }, 3000);
-    });
-  </script>
-</body>
-</html>
+  button {
+    padding: 12px 30px;
+    background: linear-gradient(135deg, #00ffd5, #00b3ff);
+    border: none;
+    border-radius: 10px;
+    color: #000;
+    font-size: 18px;
+    cursor: pointer;
+    margin: 30px auto 0;
+    display: block;
+    box-shadow: 0 0 20px rgba(0, 255, 204, 0.4);
+    transition: background 0.3s, transform 0.2s;
+  }
+
+  button:hover {
+    background: linear-gradient(135deg, #00ffdd, #33cfff);
+    transform: scale(1.05);
+  }
+</style>
