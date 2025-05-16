@@ -3,246 +3,160 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>FocusFlow - ADHD Focus App</title>
+  <title>ADHD Focus Quiz</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    html, body {
+    body {
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #0f0f0f;
-      color: #fff;
-      height: 100%;
-      width: 100%;
-    }
-
-    #app {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      height: 100vh;
+      background: linear-gradient(135deg, #00ffff, #ff00ff);
+      background-size: 200% 200%;
+      animation: backgroundShift 6s ease-in-out infinite alternate;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      padding: 20px;
     }
 
-    .loader {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      animation: fadeOut 1s ease 2.5s forwards;
+    #quiz-container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      text-align: center;
+      width: 90%;
+      max-width: 500px;
+      backdrop-filter: blur(10px);
+      animation: popIn 0.5s ease;
     }
 
-    .dot {
-      width: 20px;
-      height: 20px;
-      margin: 5px;
-      border-radius: 50%;
-      background-color: #00ffcc;
-      animation: bounce 0.6s infinite alternate;
-    }
-
-    .dot:nth-child(2) {
-      animation-delay: 0.2s;
-    }
-
-    .dot:nth-child(3) {
-      animation-delay: 0.4s;
-    }
-
-    @keyframes bounce {
-      to {
-        transform: translateY(-15px);
-      }
-    }
-
-    @keyframes fadeOut {
-      to {
-        opacity: 0;
-        pointer-events: none;
-      }
-    }
-
-    .quiz-container {
-      width: 100%;
-      max-width: 700px;
-      background: #1a1a1a;
-      padding: 5vw;
-      border-radius: 12px;
-      box-shadow: 0 0 25px rgba(0, 255, 204, 0.2);
+    h1 {
+      font-size: 2.5rem;
+      color: #fff;
+      margin-bottom: 20px;
     }
 
     .question {
-      margin-bottom: 40px;
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+      color: #fff;
+      animation: fadeIn 0.5s ease;
     }
 
-    .question p {
-      font-size: clamp(16px, 2vw, 20px);
-      text-align: center;
-    }
-
-    .options {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-
-    .circle {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: 3px solid;
-      cursor: pointer;
-      transition: transform 0.2s, border-width 0.2s;
-    }
-
-    .circle:hover {
-      transform: scale(1.1);
-    }
-
-    .circle.selected {
-      border-width: 5px;
-    }
-
-    .disagree1 { border-color: #ff7a00; }
-    .disagree2 { border-color: #ffaa00; }
-    .neutral   { border-color: #00ff00; }
-    .agree1    { border-color: #ff66cc; }
-    .agree2    { border-color: #ff3399; }
-
-    .labels {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 8px;
-      font-size: clamp(12px, 1.5vw, 14px);
-      padding: 0 10%;
-      color: #aaa;
-    }
-
-    .quiz-result {
-      text-align: center;
-      font-size: clamp(18px, 2vw, 22px);
-      margin-top: 30px;
-      color: #00ffcc;
-    }
-
-    button {
-      padding: 12px 30px;
-      background: #00ffcc;
-      border: none;
-      border-radius: 8px;
-      color: #000;
-      font-size: 16px;
-      cursor: pointer;
+    .option {
       display: block;
-      margin: 20px auto 0;
+      background-color: #fff;
+      color: #000;
+      padding: 15px;
+      margin: 10px auto;
+      border-radius: 12px;
+      border: none;
+      font-size: 1.1rem;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.3s ease;
     }
 
-    @media (max-width: 600px) {
-      .circle {
-        width: 35px;
-        height: 35px;
-      }
+    .option:hover {
+      background-color: #ffd700;
+      transform: scale(1.05);
+    }
 
-      .quiz-container {
-        padding: 6vw 4vw;
-      }
+    .score {
+      font-size: 5rem;
+      font-weight: bold;
+      margin-top: 20px;
+      animation: pulse 1s infinite alternate;
+    }
+
+    @keyframes backgroundShift {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.08); }
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
   </style>
 </head>
 <body>
-  <div id="app">
-    <div class="loader" id="loader">
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <p style="margin-top: 10px;">Loading your focus zone...</p>
+  <div id="quiz-container">
+    <h1>ADHD Focus Quiz</h1>
+    <div id="quiz-content">
+      <div class="question" id="question">Loading...</div>
+      <button class="option" onclick="selectOption(1)">Option 1</button>
+      <button class="option" onclick="selectOption(2)">Option 2</button>
+      <button class="option" onclick="selectOption(3)">Option 3</button>
+      <button class="option" onclick="selectOption(4)">Option 4</button>
     </div>
+    <div id="result" style="display:none;" class="score">0</div>
   </div>
 
   <script>
-    const quizQuestions = [
-      { q: 'I frequently make typos, miscalculations, or other careless errors at work.' },
-      { q: 'I struggle to maintain attention on tasks or conversations.' },
-      { q: 'My mind often feels like it\'s racing with thoughts.' },
-      { q: 'I tend to procrastinate important tasks until the last minute.' },
-      { q: 'I often feel overwhelmed by routine responsibilities.' },
-      { q: 'I have difficulty organizing tasks and managing time effectively.' },
+    const questions = [
+      {
+        question: "You find it hard to sit still for long periods.",
+        options: ["Never", "Rarely", "Often", "Always"],
+        score: [0, 1, 2, 3]
+      },
+      {
+        question: "You get distracted easily during tasks.",
+        options: ["Never", "Rarely", "Often", "Always"],
+        score: [0, 1, 2, 3]
+      },
+      {
+        question: "You have trouble organizing tasks or activities.",
+        options: ["Never", "Rarely", "Often", "Always"],
+        score: [0, 1, 2, 3]
+      }
     ];
 
-    function showQuiz() {
-      const app = document.getElementById('app');
-      app.innerHTML = '<div class="quiz-container" id="quiz"></div>';
-      const container = document.getElementById('quiz');
-      let answers = [];
+    let currentQuestion = 0;
+    let totalScore = 0;
 
-      quizQuestions.forEach((item, index) => {
-        const qDiv = document.createElement('div');
-        qDiv.className = 'question';
-        qDiv.innerHTML = `
-          <p>${index + 1}. ${item.q}</p>
-          <div class="options" data-index="${index}">
-            <div class="circle disagree1" data-value="1"></div>
-            <div class="circle disagree2" data-value="2"></div>
-            <div class="circle neutral" data-value="3"></div>
-            <div class="circle agree1" data-value="4"></div>
-            <div class="circle agree2" data-value="5"></div>
-          </div>
-          <div class="labels">
-            <span>DISAGREE</span>
-            <span>AGREE</span>
-          </div>
-        `;
-        container.appendChild(qDiv);
+    function loadQuestion() {
+      const q = questions[currentQuestion];
+      document.getElementById("question").textContent = q.question;
+      const buttons = document.querySelectorAll(".option");
+      q.options.forEach((opt, index) => {
+        buttons[index].textContent = opt;
       });
-
-      const optionGroups = document.querySelectorAll('.options');
-      optionGroups.forEach(group => {
-        group.addEventListener('click', e => {
-          if (e.target.classList.contains('circle')) {
-            const value = parseInt(e.target.dataset.value);
-            const qIndex = parseInt(group.dataset.index);
-            answers[qIndex] = value;
-
-            group.querySelectorAll('.circle').forEach(c => c.classList.remove('selected'));
-            e.target.classList.add('selected');
-          }
-        });
-      });
-
-      const submitBtn = document.createElement('button');
-      submitBtn.textContent = 'Submit';
-      submitBtn.onclick = () => {
-        if (answers.length !== quizQuestions.length || answers.includes(undefined)) {
-          alert('Please answer all questions.');
-          return;
-        }
-        const score = answers.reduce((a, b) => a + b, 0);
-        const avg = score / answers.length;
-        let level = 'Low';
-        if (avg >= 4) level = 'High';
-        else if (avg >= 2.6) level = 'Moderate';
-
-        container.innerHTML = "<div class='quiz-result'>Your ADHD focus level: <strong>" + level + "</strong></div>";
-        localStorage.setItem('hasVisited', 'true');
-        localStorage.setItem('focusLevel', level);
-      };
-      container.appendChild(submitBtn);
     }
 
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        const visited = localStorage.getItem('hasVisited');
-        if (!visited) {
-          showQuiz();
-        } else {
-          document.getElementById('app').innerHTML = "<div class='quiz-result'>Welcome back! Focus level: <strong>" + localStorage.getItem('focusLevel') + "</strong></div>";
-        }
-      }, 3000);
-    });
+    function selectOption(index) {
+      totalScore += questions[currentQuestion].score[index];
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        loadQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      document.getElementById("quiz-content").style.display = "none";
+      const resultEl = document.getElementById("result");
+      resultEl.textContent = totalScore; // Show just the number
+      resultEl.style.display = "block";
+
+      // Set color based on score range
+      if (totalScore <= 3) resultEl.style.color = "red";
+      else if (totalScore <= 6) resultEl.style.color = "gold";
+      else resultEl.style.color = "lime";
+    }
+
+    loadQuestion();
   </script>
 </body>
 </html>
