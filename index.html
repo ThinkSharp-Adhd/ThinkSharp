@@ -10,83 +10,85 @@
       padding: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       height: 100vh;
-      background: linear-gradient(135deg, #00ffff, #ff00ff);
-      background-size: 200% 200%;
-      animation: backgroundShift 6s ease-in-out infinite alternate;
+      background: linear-gradient(135deg, #ff5f6d, #ffc371);
+      background-size: 400% 400%;
+      animation: gradientBG 8s ease infinite;
       display: flex;
       justify-content: center;
       align-items: center;
     }
 
     #quiz-container {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 30px;
+      background: rgba(255, 255, 255, 0.2);
       border-radius: 20px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.3);
-      text-align: center;
-      width: 90%;
-      max-width: 500px;
+      padding: 40px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
       backdrop-filter: blur(10px);
-      animation: popIn 0.5s ease;
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      text-align: center;
+      max-width: 600px;
+      width: 90%;
+      animation: fadeIn 1s ease;
     }
 
     h1 {
       font-size: 2.5rem;
       color: #fff;
       margin-bottom: 20px;
+      animation: bounceIn 1s ease;
     }
 
     .question {
-      font-size: 1.4rem;
-      margin-bottom: 20px;
+      font-size: 1.5rem;
       color: #fff;
+      margin-bottom: 30px;
       animation: fadeIn 0.5s ease;
     }
 
     .option {
-      display: block;
-      background-color: #fff;
-      color: #000;
-      padding: 15px;
-      margin: 10px auto;
-      border-radius: 12px;
+      background: #ffffff;
       border: none;
+      border-radius: 12px;
+      padding: 15px 25px;
+      margin: 10px 0;
       font-size: 1.1rem;
       cursor: pointer;
       width: 100%;
-      transition: all 0.3s ease;
+      transition: transform 0.2s, background 0.3s;
     }
 
     .option:hover {
-      background-color: #ffd700;
+      background: #ffe066;
       transform: scale(1.05);
     }
 
     .score {
       font-size: 5rem;
       font-weight: bold;
+      animation: pulse 1.5s infinite alternate;
       margin-top: 20px;
-      animation: pulse 1s infinite alternate;
     }
 
-    @keyframes backgroundShift {
+    @keyframes gradientBG {
       0% { background-position: 0% 50%; }
-      100% { background-position: 100% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes bounceIn {
+      0% { transform: scale(0.9); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
     }
 
     @keyframes pulse {
       0% { transform: scale(1); }
       100% { transform: scale(1.08); }
-    }
-
-    @keyframes popIn {
-      from { opacity: 0; transform: scale(0.8); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
     }
   </style>
 </head>
@@ -95,12 +97,12 @@
     <h1>ADHD Focus Quiz</h1>
     <div id="quiz-content">
       <div class="question" id="question">Loading...</div>
-      <button class="option" onclick="selectOption(1)">Option 1</button>
-      <button class="option" onclick="selectOption(2)">Option 2</button>
-      <button class="option" onclick="selectOption(3)">Option 3</button>
-      <button class="option" onclick="selectOption(4)">Option 4</button>
+      <button class="option" onclick="selectOption(0)">Option 1</button>
+      <button class="option" onclick="selectOption(1)">Option 2</button>
+      <button class="option" onclick="selectOption(2)">Option 3</button>
+      <button class="option" onclick="selectOption(3)">Option 4</button>
     </div>
-    <div id="result" style="display:none;" class="score">0</div>
+    <div id="result" class="score" style="display:none;">0</div>
   </div>
 
   <script>
@@ -108,17 +110,27 @@
       {
         question: "You find it hard to sit still for long periods.",
         options: ["Never", "Rarely", "Often", "Always"],
-        score: [0, 1, 2, 3]
+        scores: [0, 1, 2, 3]
       },
       {
         question: "You get distracted easily during tasks.",
         options: ["Never", "Rarely", "Often", "Always"],
-        score: [0, 1, 2, 3]
+        scores: [0, 1, 2, 3]
       },
       {
         question: "You have trouble organizing tasks or activities.",
         options: ["Never", "Rarely", "Often", "Always"],
-        score: [0, 1, 2, 3]
+        scores: [0, 1, 2, 3]
+      },
+      {
+        question: "You frequently forget things like appointments or obligations.",
+        options: ["Never", "Rarely", "Often", "Always"],
+        scores: [0, 1, 2, 3]
+      },
+      {
+        question: "You feel like your thoughts are racing and hard to control.",
+        options: ["Never", "Rarely", "Often", "Always"],
+        scores: [0, 1, 2, 3]
       }
     ];
 
@@ -129,13 +141,13 @@
       const q = questions[currentQuestion];
       document.getElementById("question").textContent = q.question;
       const buttons = document.querySelectorAll(".option");
-      q.options.forEach((opt, index) => {
-        buttons[index].textContent = opt;
+      buttons.forEach((btn, idx) => {
+        btn.textContent = q.options[idx];
       });
     }
 
     function selectOption(index) {
-      totalScore += questions[currentQuestion].score[index];
+      totalScore += questions[currentQuestion].scores[index];
       currentQuestion++;
       if (currentQuestion < questions.length) {
         loadQuestion();
@@ -147,13 +159,18 @@
     function showResult() {
       document.getElementById("quiz-content").style.display = "none";
       const resultEl = document.getElementById("result");
-      resultEl.textContent = totalScore; // Show just the number
-      resultEl.style.display = "block";
+      resultEl.textContent = totalScore;
 
-      // Set color based on score range
-      if (totalScore <= 3) resultEl.style.color = "red";
-      else if (totalScore <= 6) resultEl.style.color = "gold";
-      else resultEl.style.color = "lime";
+      // Color based on score range (no text)
+      if (totalScore <= 5) {
+        resultEl.style.color = "red";
+      } else if (totalScore <= 10) {
+        resultEl.style.color = "gold";
+      } else {
+        resultEl.style.color = "lime";
+      }
+
+      resultEl.style.display = "block";
     }
 
     loadQuestion();
