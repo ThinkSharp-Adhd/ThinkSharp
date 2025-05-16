@@ -1,141 +1,224 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>FocusMate - Loading & ADHD Check</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FocusFlow - ADHD Focus App</title>
   <style>
-    :root {
-      --bg: #e8f5f9;
-      --primary-start: #ff9f1c;
-      --primary-mid: #2ec4b6;
-      --primary-end: #e71d36;
-      --text: #234e52;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body, html {
-      width: 100%; height: 100%;
+    body {
+      margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background-color: var(--bg);
-      display: flex; justify-content: center; align-items: center;
-      overflow: hidden;
-      flex-direction: column;
+      background: #0f0f0f;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
     }
-    .hidden { display: none; }
-    /* Loader styles */
-    .loader-text { font-size: 1.2rem; color: var(--text); margin-bottom: 30px; opacity: 0; animation: fadeIn 2s forwards; }
-    .dot-loader { display: flex; gap: 10px; }
-    .dot { width: 16px; height: 16px; background-color: var(--primary-mid); border-radius: 50%; animation: bounce 1.2s infinite ease-in-out; }
-    .dot:nth-child(2) { animation-delay: 0.2s; background-color: var(--primary-start); }
-    .dot:nth-child(3) { animation-delay: 0.4s; background-color: var(--primary-end); }
-    .sub-message { margin-top: 40px; font-size: 0.9rem; color: #4b7c8b; opacity: 0; animation: fadeIn 3s 1.5s forwards; }
-    @keyframes bounce { 0%,80%,100%{transform: translateY(0);}40%{transform: translateY(-15px);} }
-    @keyframes fadeIn { to { opacity: 1; } }
-    /* Quiz styles */
-    .quiz-container { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; max-width: 450px; text-align: center; }
-    .quiz-question { margin-bottom: 20px; color: var(--text); font-size: 1rem; line-height: 1.4; }
-    .likert { display: flex; justify-content: center; gap: 12px; margin-bottom: 8px; }
-    .likert button { width: 30px; height: 30px; background: #fff; border: 2px solid #ccc; border-radius: 50%; cursor: pointer; transition: transform 0.2s; }
-    .likert button:hover { transform: scale(1.1); }
-    .likert button:nth-child(1), .likert button:nth-child(2) { background: var(--primary-start); }
-    .likert button:nth-child(3) { background: var(--primary-mid); }
-    .likert button:nth-child(4), .likert button:nth-child(5) { background: var(--primary-end); }
-    .scale-labels { display: flex; justify-content: space-between; font-size: 0.8rem; color: #666; }
-    .quiz-result { font-size: 1.1rem; color: var(--text); margin-top: 20px; }
+
+    .loader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeOut 1s ease 2.5s forwards;
+    }
+
+    .dot {
+      width: 20px;
+      height: 20px;
+      margin: 5px;
+      border-radius: 50%;
+      background-color: #00ffcc;
+      animation: bounce 0.6s infinite alternate;
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes bounce {
+      to {
+        transform: translateY(-15px);
+      }
+    }
+
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        pointer-events: none;
+      }
+    }
+
+    .quiz-container {
+      max-width: 700px;
+      background: #1a1a1a;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 25px rgba(0, 255, 204, 0.2);
+    }
+
+    .question {
+      margin-bottom: 40px;
+    }
+
+    .question p {
+      font-size: 18px;
+      text-align: center;
+    }
+
+    .options {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid;
+      cursor: pointer;
+      transition: transform 0.2s, border-width 0.2s;
+    }
+
+    .circle:hover {
+      transform: scale(1.1);
+    }
+
+    .circle.selected {
+      border-width: 5px;
+    }
+
+    .disagree1 { border-color: #ff7a00; }
+    .disagree2 { border-color: #ffaa00; }
+    .neutral    { border-color: #00ff00; }
+    .agree1   { border-color: #ff66cc; }
+    .agree2   { border-color: #ff3399; }
+
+    .labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 14px;
+      padding: 0 20px;
+      color: #aaa;
+    }
+
+    .quiz-result {
+      text-align: center;
+      font-size: 20px;
+      margin-top: 30px;
+      color: #00ffcc;
+    }
+
+    button {
+      padding: 10px 25px;
+      background: #00ffcc;
+      border: none;
+      border-radius: 8px;
+      color: #000;
+      font-size: 16px;
+      cursor: pointer;
+      display: block;
+      margin: 20px auto 0;
+    }
   </style>
 </head>
 <body>
-  <!-- Loader Screen -->
-  <div id="loader-screen">
-    <div class="loader-text">Getting things ready to help you focus…</div>
-    <div class="dot-loader">
+  <div id="app">
+    <div class="loader" id="loader">
       <div class="dot"></div>
       <div class="dot"></div>
       <div class="dot"></div>
+      <p style="margin-top: 10px;">Loading your focus zone...</p>
     </div>
-    <div class="sub-message">Breathe in... Breathe out... You're doing great. 🧠💪</div>
-  </div>
-
-  <!-- Quiz Screen -->
-  <div id="quiz-screen" class="hidden quiz-container">
-    <div id="quiz-content"></div>
-  </div>
-
-  <!-- Main App Placeholder -->
-  <div id="app-screen" class="hidden">
-    <h2>Welcome Back!</h2>
   </div>
 
   <script>
-    // Expanded ADHD-level quiz
-    const quizData = [
+    const quizQuestions = [
       { q: 'I frequently make typos, miscalculations, or other careless errors at work.' },
-      { q: 'I often find it difficult to sustain attention in tasks or play activities.' },
-      { q: 'I get easily distracted by extraneous stimuli.' },
-      { q: 'I frequently leave my seat in situations when remaining seated is expected.' },
-      { q: 'I have difficulty waiting my turn in conversations or activities.' },
-      { q: 'My mind often feels like it's racing with thoughts.' }
+      { q: 'I struggle to maintain attention on tasks or conversations.' },
+      { q: 'My mind often feels like it\'s racing with thoughts.' },
+      { q: 'I tend to procrastinate important tasks until the last minute.' },
+      { q: 'I often feel overwhelmed by routine responsibilities.' },
+      { q: 'I have difficulty organizing tasks and managing time effectively.' },
     ];
-    let currentQ = 0;
-    let score = 0;
 
     function showQuiz() {
-      document.getElementById('loader-screen').classList.add('hidden');
-      document.getElementById('quiz-screen').classList.remove('hidden');
-      renderQuestion();
+      const app = document.getElementById('app');
+      app.innerHTML = '<div class="quiz-container" id="quiz"></div>';
+      const container = document.getElementById('quiz');
+      let answers = [];
+
+      quizQuestions.forEach((item, index) => {
+        const qDiv = document.createElement('div');
+        qDiv.className = 'question';
+        qDiv.innerHTML = `
+          <p>${index + 1}. ${item.q}</p>
+          <div class="options" data-index="${index}">
+            <div class="circle disagree1" data-value="1"></div>
+            <div class="circle disagree2" data-value="2"></div>
+            <div class="circle neutral" data-value="3"></div>
+            <div class="circle agree1" data-value="4"></div>
+            <div class="circle agree2" data-value="5"></div>
+          </div>
+          <div class="labels">
+            <span>DISAGREE</span>
+            <span>AGREE</span>
+          </div>
+        `;
+        container.appendChild(qDiv);
+      });
+
+      const optionGroups = document.querySelectorAll('.options');
+      optionGroups.forEach(group => {
+        group.addEventListener('click', e => {
+          if (e.target.classList.contains('circle')) {
+            const value = parseInt(e.target.dataset.value);
+            const qIndex = parseInt(group.dataset.index);
+            answers[qIndex] = value;
+
+            // Deselect all
+            group.querySelectorAll('.circle').forEach(c => c.classList.remove('selected'));
+            e.target.classList.add('selected');
+          }
+        });
+      });
+
+      const submitBtn = document.createElement('button');
+      submitBtn.textContent = 'Submit';
+      submitBtn.onclick = () => {
+        if (answers.length !== quizQuestions.length || answers.includes(undefined)) {
+          alert('Please answer all questions.');
+          return;
+        }
+        const score = answers.reduce((a, b) => a + b, 0);
+        const avg = score / answers.length;
+        let level = 'Low';
+        if (avg >= 4) level = 'High';
+        else if (avg >= 2.6) level = 'Moderate';
+
+        container.innerHTML = "<div class='quiz-result'>Your ADHD focus level: <strong>" + level + "</strong></div>";
+        localStorage.setItem('hasVisited', 'true');
+        localStorage.setItem('focusLevel', level);
+      };
+      container.appendChild(submitBtn);
     }
 
-    function renderQuestion() {
-      const container = document.getElementById('quiz-content');
-      const { q } = quizData[currentQ];
-      let options = '';
-      for (let i = 0; i < 5; i++) {
-        options += `<button onclick="answer(${i})"></button>`;
-      }
-      container.innerHTML = `
-        <div class="quiz-question">${q}</div>
-        <div class="likert">
-          ${options}
-        </div>
-        <div class="scale-labels"><span>Disagree</span><span>Agree</span></div>
-      `;
-    }
-
-    function answer(value) {
-      score += value;
-      currentQ++;
-      if (currentQ < quizData.length) {
-        renderQuestion();
-      } else {
-        showResult();
-      }
-    }
-
-    function showResult() {
-      const container = document.getElementById('quiz-content');
-      const avg = score / quizData.length;
-      let level = 'Low';
-      if (avg >= 3) level = 'High';
-      else if (avg >= 1.5) level = 'Moderate';
-      container.innerHTML = `<div class='quiz-result'>Your ADHD focus level: <strong>${level}</strong></div>`;
-      localStorage.setItem('visited', 'true');
-      localStorage.setItem('adhdLevel', level);
+    window.addEventListener('load', () => {
       setTimeout(() => {
-        document.getElementById('quiz-screen').classList.add('hidden');
-        document.getElementById('app-screen').classList.remove('hidden');
-      }, 2000);
-    }
-
-    // On load
-    window.addEventListener('DOMContentLoaded', () => {
-      if (!localStorage.getItem('visited')) {
-        setTimeout(showQuiz, 3000);
-      } else {
-        setTimeout(() => {
-          document.getElementById('loader-screen').classList.add('hidden');
-          document.getElementById('app-screen').classList.remove('hidden');
-        }, 2000);
-      }
+        const visited = localStorage.getItem('hasVisited');
+        if (!visited) {
+          showQuiz();
+        } else {
+          document.getElementById('app').innerHTML = "<div class='quiz-result'>Welcome back! Focus level: <strong>" + localStorage.getItem('focusLevel') + "</strong></div>";
+        }
+      }, 3000);
     });
   </script>
 </body>
