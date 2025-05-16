@@ -7,8 +7,9 @@
   <style>
     :root {
       --bg: #e8f5f9;
-      --primary: #52b2cf;
-      --secondary: #a1e3d8;
+      --primary-start: #ff9f1c;
+      --primary-mid: #2ec4b6;
+      --primary-end: #e71d36;
       --text: #234e52;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -24,18 +25,22 @@
     /* Loader styles */
     .loader-text { font-size: 1.2rem; color: var(--text); margin-bottom: 30px; opacity: 0; animation: fadeIn 2s forwards; }
     .dot-loader { display: flex; gap: 10px; }
-    .dot { width: 16px; height: 16px; background-color: var(--primary); border-radius: 50%; animation: bounce 1.2s infinite ease-in-out; }
-    .dot:nth-child(2) { animation-delay: 0.2s; background-color: var(--secondary); }
-    .dot:nth-child(3) { animation-delay: 0.4s; }
+    .dot { width: 16px; height: 16px; background-color: var(--primary-mid); border-radius: 50%; animation: bounce 1.2s infinite ease-in-out; }
+    .dot:nth-child(2) { animation-delay: 0.2s; background-color: var(--primary-start); }
+    .dot:nth-child(3) { animation-delay: 0.4s; background-color: var(--primary-end); }
     .sub-message { margin-top: 40px; font-size: 0.9rem; color: #4b7c8b; opacity: 0; animation: fadeIn 3s 1.5s forwards; }
     @keyframes bounce { 0%,80%,100%{transform: translateY(0);}40%{transform: translateY(-15px);} }
     @keyframes fadeIn { to { opacity: 1; } }
     /* Quiz styles */
-    .quiz-container { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; max-width: 400px; text-align: center; }
-    .quiz-question { margin-bottom: 15px; color: var(--text); }
-    .quiz-options { list-style: none; padding: 0; }
-    .quiz-options li { margin: 8px 0; }
-    .quiz-options button { padding: 10px 20px; border: none; border-radius: 8px; background: var(--primary); color: white; cursor: pointer; }
+    .quiz-container { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; max-width: 450px; text-align: center; }
+    .quiz-question { margin-bottom: 20px; color: var(--text); font-size: 1rem; line-height: 1.4; }
+    .likert { display: flex; justify-content: center; gap: 12px; margin-bottom: 8px; }
+    .likert button { width: 30px; height: 30px; background: #fff; border: 2px solid #ccc; border-radius: 50%; cursor: pointer; transition: transform 0.2s; }
+    .likert button:hover { transform: scale(1.1); }
+    .likert button:nth-child(1), .likert button:nth-child(2) { background: var(--primary-start); }
+    .likert button:nth-child(3) { background: var(--primary-mid); }
+    .likert button:nth-child(4), .likert button:nth-child(5) { background: var(--primary-end); }
+    .scale-labels { display: flex; justify-content: space-between; font-size: 0.8rem; color: #666; }
     .quiz-result { font-size: 1.1rem; color: var(--text); margin-top: 20px; }
   </style>
 </head>
@@ -53,78 +58,85 @@
 
   <!-- Quiz Screen -->
   <div id="quiz-screen" class="hidden quiz-container">
-    <div id="quiz-content">
-      <!-- Questions will be injected here -->
-    </div>
+    <div id="quiz-content"></div>
   </div>
 
   <!-- Main App Placeholder -->
   <div id="app-screen" class="hidden">
-    <!-- TODO: Main app UI here -->
     <h2>Welcome Back!</h2>
   </div>
 
-<script>
-  // Sample ADHD-level quiz
-  const quizData = [
-    { q: 'Do you often find yourself unable to stay focused on tasks?', a: ['Never', 'Sometimes', 'Often', 'Always'] },
-    { q: 'Do you struggle with organizing tasks and activities?', a: ['Never', 'Sometimes', 'Often', 'Always'] },
-    { q: 'Do you get easily distracted by external stimuli?', a: ['Never', 'Sometimes', 'Often', 'Always'] },
-  ];
-  let currentQ = 0;
-  let score = 0;
+  <script>
+    // Expanded ADHD-level quiz
+    const quizData = [
+      { q: 'I frequently make typos, miscalculations, or other careless errors at work.' },
+      { q: 'I often find it difficult to sustain attention in tasks or play activities.' },
+      { q: 'I get easily distracted by extraneous stimuli.' },
+      { q: 'I frequently leave my seat in situations when remaining seated is expected.' },
+      { q: 'I have difficulty waiting my turn in conversations or activities.' },
+      { q: 'My mind often feels like it's racing with thoughts.' }
+    ];
+    let currentQ = 0;
+    let score = 0;
 
-  function showQuiz() {
-    document.getElementById('loader-screen').classList.add('hidden');
-    document.getElementById('quiz-screen').classList.remove('hidden');
-    renderQuestion();
-  }
+    function showQuiz() {
+      document.getElementById('loader-screen').classList.add('hidden');
+      document.getElementById('quiz-screen').classList.remove('hidden');
+      renderQuestion();
+    }
 
-  function renderQuestion() {
-    const container = document.getElementById('quiz-content');
-    const { q, a } = quizData[currentQ];
-    container.innerHTML = `<div class='quiz-question'>${q}</div><ul class='quiz-options'>${
-      a.map((opt, i) => `<li><button onclick="answer(${i})">${opt}</button></li>`).join('')
-    }</ul>`;
-  }
+    function renderQuestion() {
+      const container = document.getElementById('quiz-content');
+      const { q } = quizData[currentQ];
+      let options = '';
+      for (let i = 0; i < 5; i++) {
+        options += `<button onclick="answer(${i})"></button>`;
+      }
+      container.innerHTML = `
+        <div class="quiz-question">${q}</div>
+        <div class="likert">
+          ${options}
+        </div>
+        <div class="scale-labels"><span>Disagree</span><span>Agree</span></div>
+      `;
+    }
 
-  function answer(idx) {
-    score += idx;
-    currentQ++;
-    if (currentQ < quizData.length) renderQuestion();
-    else showResult();
-  }
+    function answer(value) {
+      score += value;
+      currentQ++;
+      if (currentQ < quizData.length) {
+        renderQuestion();
+      } else {
+        showResult();
+      }
+    }
 
-  function showResult() {
-    const container = document.getElementById('quiz-content');
-    const avg = score / quizData.length;
-    let level = 'Low';
-    if (avg >= 2.5) level = 'High';
-    else if (avg >= 1.5) level = 'Moderate';
-    container.innerHTML = `<div class='quiz-result'>Your ADHD focus level: <strong>${level}</strong></div>`;
-    localStorage.setItem('visited', 'true');
-    localStorage.setItem('adhdLevel', level);
-    // after a short delay, proceed to app
-    setTimeout(() => {
-      document.getElementById('quiz-screen').classList.add('hidden');
-      document.getElementById('app-screen').classList.remove('hidden');
-    }, 2000);
-  }
-
-  // On load
-  window.addEventListener('DOMContentLoaded', () => {
-    const isVisited = localStorage.getItem('visited');
-    if (!isVisited) {
-      // show quiz after loader
-      setTimeout(showQuiz, 3000);
-    } else {
-      // skip quiz, go to app
+    function showResult() {
+      const container = document.getElementById('quiz-content');
+      const avg = score / quizData.length;
+      let level = 'Low';
+      if (avg >= 3) level = 'High';
+      else if (avg >= 1.5) level = 'Moderate';
+      container.innerHTML = `<div class='quiz-result'>Your ADHD focus level: <strong>${level}</strong></div>`;
+      localStorage.setItem('visited', 'true');
+      localStorage.setItem('adhdLevel', level);
       setTimeout(() => {
-        document.getElementById('loader-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.add('hidden');
         document.getElementById('app-screen').classList.remove('hidden');
       }, 2000);
     }
-  });
-</script>
+
+    // On load
+    window.addEventListener('DOMContentLoaded', () => {
+      if (!localStorage.getItem('visited')) {
+        setTimeout(showQuiz, 3000);
+      } else {
+        setTimeout(() => {
+          document.getElementById('loader-screen').classList.add('hidden');
+          document.getElementById('app-screen').classList.remove('hidden');
+        }, 2000);
+      }
+    });
+  </script>
 </body>
 </html>
