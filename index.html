@@ -14,6 +14,11 @@
       from { opacity: 0; transform: translateX(-2vw); }
       to { opacity: 1; transform: translateX(0); }
     }
+    @keyframes partyPopper {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      50% { transform: translateY(-2vh) rotate(15deg); opacity: 0.8; }
+      100% { transform: translateY(-4vh) rotate(30deg); opacity: 0; }
+    }
     .fade-in { animation: fadeIn 0.5s ease-out; }
     .slide-in { animation: slideIn 0.5s ease-out; }
     .circle {
@@ -29,6 +34,9 @@
     .task-item:hover {
       transform: translateX(0.5vw);
       background-color: #f3f4f6;
+    }
+    .dark .task-item:hover {
+      background-color: #4b5563;
     }
     .loader-dot {
       animation: pulse 1.5s ease-in-out infinite;
@@ -54,10 +62,26 @@
       opacity: 0.5;
       pointer-events: none;
     }
+    .party-popper {
+      position: absolute;
+      font-size: 1.5rem;
+      animation: partyPopper 1s ease-out forwards;
+    }
+    .progress-bar {
+      height: 1vh;
+      background-color: #4caf50;
+      transition: width 0.3s ease;
+    }
+    .dark .progress-bar {
+      background-color: #34d399;
+    }
+    .modal {
+      backdrop-filter: blur(5px);
+    }
   </style>
 </head>
-<body class="bg-gray-100 min-h-[100vh] flex items-center justify-center">
-  <div id="app" class="w-[90vw] max-w-[600px] min-w-[300px] mx-auto p-[4vw] sm:p-[2vw] bg-white rounded-xl shadow-lg">
+<body class="bg-gray-100 min-h-[100vh] flex items-center justify-center transition-colors duration-300" id="body">
+  <div id="app" class="w-[90vw] max-w-[600px] min-w-[300px] mx-auto p-[4vw] sm:p-[2vw] bg-white rounded-xl shadow-lg relative transition-colors duration-300">
     <div id="loader" class="flex justify-center items-center h-[40vh] sm:h-[30vh]">
       <div class="flex space-x-[1vw]">
         <div class="w-[2vw] h-[2vw] min-w-[8px] min-h-[8px] bg-blue-500 rounded-full loader-dot" style="--i: 0;"></div>
@@ -66,11 +90,11 @@
       </div>
     </div>
     <div id="quiz" class="quiz-container hidden">
-      <div class="question text-[1.2rem] sm:text-[1.5rem] font-semibold text-gray-800 mb-[2vh] text-center" id="question">
+      <div class="question text-[1.2rem] sm:text-[1.5rem] font-semibold text-gray-800 mb-[2vh] text-center dark:text-gray-200" id="question">
         <p>Loading...</p>
       </div>
       <div class="options flex flex-wrap justify-between gap-[1vw] mb-[2vh]" id="options"></div>
-      <div class="labels flex justify-between text-[0.8rem] sm:text-[0.9rem] text-gray-600">
+      <div class="labels flex justify-between text-[0.8rem] sm:text-[0.9rem] text-gray-600 dark:text-gray-400">
         <span>Never</span>
         <span>Rarely</span>
         <span>Sometimes</span>
@@ -79,9 +103,26 @@
       </div>
     </div>
     <div id="result-screen" class="hidden">
-      <div class="quiz-result text-[1.5rem] sm:text-[2rem] font-bold text-center mb-[2vh]" id="score"></div>
+      <div class="xp-level text-[1rem] sm:text-[1.2rem] font-semibold text-center mb-[1vh] text-gray-800 dark:text-gray-200" id="xpLevel"></div>
+      <div class="progress-bar-container w-full bg-gray-200 rounded-full mb-[2vh] dark:bg-gray-700">
+        <div class="progress-bar rounded-full" id="xpProgress"></div>
+      </div>
+      <div class="quiz-result text-[1.5rem] sm:text-[2rem] font-bold text-center mb-[2vh] text-gray-800 dark:text-gray-200" id="score"></div>
       <div class="task-list space-y-[1vh]" id="tasks"></div>
-      <button class="retake-btn mt-[2vh] w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-[1rem] sm:text-[1.1rem]" onclick="resetQuiz()">Retake Quiz</button>
+      <div class="flex space-x-[1vw] mt-[2vh]">
+        <button class="retake-btn w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-[1rem] sm:text-[1.1rem]" onclick="openSettings()">Settings</button>
+      </div>
+    </div>
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal">
+      <div class="bg-white p-[4vw] rounded-xl w-[80vw] max-w-[400px] dark:bg-gray-800">
+        <h2 class="text-[1.2rem] font-semibold mb-[2vh] text-gray-800 dark:text-gray-200">Settings</h2>
+        <div class="flex items-center justify-between mb-[2vh]">
+          <label class="text-[1rem] text-gray-700 dark:text-gray-300">Dark Mode</label>
+          <input type="checkbox" id="darkModeToggle" class="w-[4vw] h-[4vw] min-w-[16px] min-h-[16px]" onchange="toggleDarkMode()">
+        </div>
+        <button class="w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-[1rem]" onclick="retakeQuiz()">Retake Quiz</button>
+        <button class="w-full py-[1vh] mt-[1vh] bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-[1rem]" onclick="closeSettings()">Close</button>
+      </div>
     </div>
   </div>
 
@@ -122,16 +163,103 @@
     let pomodoroPhase = 'focus';
     let pomodoroCycles = 0;
     let currentActiveTask = null;
-    let notepadStates = {};
+    let notepadStates = JSON.parse(localStorage.getItem('notepadStates')) || {};
+    let xp = parseInt(localStorage.getItem('xp')) || 0;
+    let level = Math.floor(xp / 100) + 1;
+    const xpPerTask = 10;
+    const xpPerLevel = 100;
+    let completedTasks = JSON.parse(localStorage.getItem('completedTasks')) || [];
+    let quizState = JSON.parse(localStorage.getItem('quizState')) || null;
+
+    function updateXP(addXP = 0) {
+      xp += addXP;
+      level = Math.floor(xp / xpPerLevel) + 1;
+      localStorage.setItem('xp', xp);
+      const xpLevelEl = document.getElementById('xpLevel');
+      const xpProgressEl = document.getElementById('xpProgress');
+      if (xpLevelEl && xpProgressEl) {
+        xpLevelEl.textContent = `Level ${level} - XP: ${xp % xpPerLevel}/${xpPerLevel}`;
+        xpProgressEl.style.width = `${(xp % xpPerLevel) / xpPerLevel * 100}%`;
+      }
+    }
+
+    function triggerPartyPopper(targetElement) {
+      const popperContainer = document.createElement('div');
+      popperContainer.style.position = 'absolute';
+      popperContainer.style.left = `${targetElement.getBoundingClientRect().left}px`;
+      popperContainer.style.top = `${targetElement.getBoundingClientRect().top - 20}px`;
+      const emojis = ['🎉', '🥳', '🎈'];
+      for (let i = 0; i < 10; i++) {
+        const popper = document.createElement('span');
+        popper.className = 'party-popper';
+        popper.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        popper.style.left = `${Math.random() * 50 - 25}px`;
+        popper.style.animationDelay = `${Math.random() * 0.5}s`;
+        popper.style.transform = `rotate(${Math.random() * 60 - 30}deg)`;
+        popperContainer.appendChild(popper);
+      }
+      document.getElementById('app').appendChild(popperContainer);
+      setTimeout(() => popperContainer.remove(), 2000);
+    }
+
+    function toggleDarkMode() {
+      const isDark = document.getElementById('darkModeToggle').checked;
+      document.getElementById('body').classList.toggle('dark', isDark);
+      document.getElementById('app').classList.toggle('bg-gray-900', isDark);
+      document.getElementById('app').classList.toggle('bg-white', !isDark);
+      document.getElementById('app').classList.toggle('text-gray-200', isDark);
+      document.getElementById('app').classList.toggle('text-gray-800', !isDark);
+      localStorage.setItem('darkMode', isDark);
+    }
+
+    function openSettings() {
+      document.getElementById('settings-modal').classList.remove('hidden');
+    }
+
+    function closeSettings() {
+      document.getElementById('settings-modal').classList.add('hidden');
+    }
+
+    function retakeQuiz() {
+      current = total = 0;
+      quizState = null;
+      completedTasks = [];
+      notepadStates = {};
+      localStorage.removeItem('quizState');
+      localStorage.removeItem('completedTasks');
+      localStorage.removeItem('notepadStates');
+      stopAllTimers();
+      document.getElementById('settings-modal').classList.add('hidden');
+      document.getElementById('result-screen').classList.add('hidden');
+      document.getElementById('quiz').classList.remove('hidden');
+      document.getElementById('quiz').classList.add('fade-in');
+      loadQuestion();
+    }
 
     window.onload = () => {
-      document.getElementById('loader').classList.add('loader-hidden');
-      setTimeout(() => {
+      // Load dark mode preference
+      const isDark = localStorage.getItem('darkMode') === 'true';
+      document.getElementById('darkModeToggle').checked = isDark;
+      document.getElementById('body').classList.toggle('dark', isDark);
+      document.getElementById('app').classList.toggle('bg-gray-900', isDark);
+      document.getElementById('app').classList.toggle('bg-white', !isDark);
+      document.getElementById('app').classList.toggle('text-gray-200', isDark);
+      document.getElementById('app').classList.toggle('text-gray-800', !isDark);
+
+      // Check for saved quiz state
+      if (quizState) {
         document.getElementById('loader').classList.add('loader-hidden');
-        document.getElementById('quiz').classList.remove('hidden');
-        document.getElementById('quiz').classList.add('fade-in');
-        loadQuestion();
-      }, 1500);
+        document.getElementById('quiz').classList.add('hidden');
+        showResult();
+      } else {
+        document.getElementById('loader').classList.add('loader-hidden');
+        setTimeout(() => {
+          document.getElementById('loader').classList.add('loader-hidden');
+          document.getElementById('quiz').classList.remove('hidden');
+          document.getElementById('quiz').classList.add('fade-in');
+          loadQuestion();
+        }, 1500);
+      }
     };
 
     function loadQuestion() {
@@ -201,36 +329,61 @@
 
     function enableTaskButtons() {
       document.querySelectorAll('.task-item button').forEach(btn => {
-        btn.classList.remove('disabled');
+        if (!btn.classList.contains('completed')) {
+          btn.classList.remove('disabled');
+        }
       });
+    }
+
+    function markTaskCompleted(taskId, button) {
+      if (!completedTasks.includes(taskId)) {
+        completedTasks.push(taskId);
+        localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+        if (button) {
+          button.classList.add('disabled', 'completed');
+          button.textContent = 'Completed';
+        }
+      }
     }
 
     function showResult() {
       document.getElementById('quiz').classList.add('hidden');
       document.getElementById('loader').classList.add('loader-hidden');
-      const percent = Math.round((total / maxScore) * 100);
+      let percent, severity;
+      if (quizState) {
+        percent = quizState.percent;
+        severity = quizState.severity;
+      } else {
+        percent = Math.round((total / maxScore) * 100);
+        severity = percent < 40 ? 'mild' : percent <= 70 ? 'moderate' : 'severe';
+        quizState = { percent, severity, tasks: tasksBySeverity[severity] };
+        localStorage.setItem('quizState', JSON.stringify(quizState));
+      }
       const scoreEl = document.getElementById('score');
       scoreEl.textContent = `Focus Score: ${percent}%`;
       scoreEl.className = `quiz-result text-[1.5rem] sm:text-[2rem] font-bold text-center mb-[2vh] fade-in ${percent < 40 ? 'text-green-500' : percent <= 70 ? 'text-yellow-500' : 'text-red-500'}`;
+      updateXP(0);
 
-      let severity = percent < 40 ? 'mild' : percent <= 70 ? 'moderate' : 'severe';
       const tasksEl = document.getElementById('tasks');
       tasksEl.innerHTML = '';
-      tasksBySeverity[severity].forEach((task, i) => {
+      quizState.tasks.forEach((task, i) => {
         const div = document.createElement('div');
         div.className = 'task-item flex items-center space-x-[1vw] slide-in';
+        div.id = `task-${i}`;
         div.style.animationDelay = `${i * 0.2}s`;
         let actionHtml = '';
+        const taskId = `${task.action}${i}`;
+        const isCompleted = completedTasks.includes(taskId);
         if (task.action === 'meditation') {
           actionHtml = `
-            <button onclick="startMeditation(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-blue-500 text-white rounded hover:bg-blue-600">Start</button>
+            <button onclick="startMeditation(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-blue-500 text-white rounded hover:bg-blue-600 ${isCompleted ? 'disabled completed' : ''}">${isCompleted ? 'Completed' : 'Start'}</button>
             <div id="meditationTimer${i}" class="hidden ml-[1vw]">
               <span id="meditationDisplay${i}" class="text-[0.9rem]"></span>
               <button onclick="stopMeditation(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-red-500 text-white rounded hover:bg-red-600">Stop</button>
             </div>`;
         } else if (task.action === 'pomodoro') {
           actionHtml = `
-            <button onclick="startPomodoro(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-blue-500 text-white rounded hover:bg-blue-600">Start</button>
+            <button onclick="startPomodoro(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-blue-500 text-white rounded hover:bg-blue-600 ${isCompleted ? 'disabled completed' : ''}">${isCompleted ? 'Completed' : 'Start'}</button>
             <div id="pomodoroTimer${i}" class="hidden ml-[1vw]">
               <span id="pomodoroDisplay${i}" class="text-[0.9rem]"></span>
               <button onclick="stopPomodoro(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-red-500 text-white rounded hover:bg-red-600">Stop</button>
@@ -238,32 +391,32 @@
         } else if (task.action === 'notepad') {
           actionHtml = `
             <div class="ml-[1vw] w-full">
-              <textarea id="notepad${i}" class="w-[60vw] p-[1vw] border rounded text-[0.9rem]" placeholder="Jot down your to-dos..."></textarea>
+              <textarea id="notepad${i}" class="w-[60vw] p-[1vw] border rounded text-[0.9rem] dark:bg-gray-700 dark:text-gray-200" placeholder="Jot down your to-dos..."></textarea>
               <div class="flex space-x-[1vw] mt-[0.5vh]">
-                <button onclick="saveNotepad(${i})" class="py-[0.5vh] px-[1vw] bg-blue-500 text-white rounded hover:bg-blue-600">Save</button>
+                <button onclick="saveNotepad(${i})" class="py-[0.5vh] px-[1vw] bg-blue-500 text-white rounded hover:bg-blue-600 ${isCompleted ? 'disabled completed' : ''}">${isCompleted ? 'Completed' : 'Save'}</button>
                 <button onclick="clearNotepad(${i})" class="py-[0.5vh] px-[1vw] bg-gray-500 text-white rounded hover:bg-gray-600">Clear</button>
               </div>
               <div id="notepadList${i}" class="mt-[1vh] text-[0.9rem]"></div>
             </div>`;
         } else if (task.action === 'workspace') {
-          actionHtml = `<p class="ml-[1vw] text-[0.9rem] italic">Clear your desk and silence notifications!</p>`;
+          actionHtml = `<p class="ml-[1vw] text-[0.9rem] italic dark:text-gray-300">Clear your desk and silence notifications!</p>`;
         } else if (task.action === 'checklist') {
           actionHtml = `
             <div class="ml-[1vw]">
-              <input id="checklistInput${i}" class="p-[0.5vw] border rounded text-[0.9rem]" placeholder="Add task...">
-              <button onclick="addChecklistItem(${i})" class="ml-[0.5vw] py-[0.5vh] px-[1vw] bg-blue-500 text-white rounded hover:bg-blue-600">Add</button>
+              <input id="checklistInput${i}" class="p-[0.5vw] border rounded text-[0.9rem] dark:bg-gray-700 dark:text-gray-200" placeholder="Add task...">
+              <button onclick="addChecklistItem(${i})" class="ml-[0.5vw] py-[0.5vh] px-[1vw] bg-blue-500 text-white rounded hover:bg-blue-600 ${isCompleted ? 'disabled completed' : ''}">${isCompleted ? 'Completed' : 'Add'}</button>
               <div id="checklist${i}" class="mt-[1vh]"></div>
             </div>`;
         } else if (task.action === 'focusBlock') {
           actionHtml = `
-            <button onclick="startFocusBlock(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-blue-500 text-white rounded hover:bg-blue-600">Start</button>
+            <button onclick="startFocusBlock(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-blue-500 text-white rounded hover:bg-blue-600 ${isCompleted ? 'disabled completed' : ''}">${isCompleted ? 'Completed' : 'Start'}</button>
             <div id="focusBlockTimer${i}" class="hidden ml-[1vw]">
               <span id="focusBlockDisplay${i}" class="text-[0.9rem]"></span>
               <button onclick="stopFocusBlock(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-red-500 text-white rounded hover:bg-red-600">Stop</button>
             </div>`;
         } else if (task.action === 'microTask') {
           actionHtml = `
-            <button onclick="startMicroTask(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-blue-500 text-white rounded hover:bg-blue-600">Start</button>
+            <button onclick="startMicroTask(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-blue-500 text-white rounded hover:bg-blue-600 ${isCompleted ? 'disabled completed' : ''}">${isCompleted ? 'Completed' : 'Start'}</button>
             <div id="microTaskTimer${i}" class="hidden ml-[1vw]">
               <span id="microTaskDisplay${i}" class="text-[0.9rem]"></span>
               <button onclick="completeMicroTask(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-green-500 text-white rounded hover:bg-green-600">Done</button>
@@ -271,37 +424,35 @@
             </div>`;
         } else if (task.action === 'workStretch') {
           actionHtml = `
-            <button onclick="startWorkStretch(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-blue-500 text-white rounded hover:bg-blue-600">Start</button>
+            <button onclick="startWorkStretch(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-blue-500 text-white rounded hover:bg-blue-600 ${isCompleted ? 'disabled completed' : ''}">${isCompleted ? 'Completed' : 'Start'}</button>
             <div id="workStretchTimer${i}" class="hidden ml-[1vw]">
               <span id="workStretchDisplay${i}" class="text-[0.9rem]"></span>
               <button onclick="stopWorkStretch(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-red-500 text-white rounded hover:bg-red-600">Stop</button>
             </div>`;
         } else if (task.action === 'accountability') {
-          actionHtml = `<input id="accountability${i}" class="ml-[1vw] p-[0.5vw] border rounded text-[0.9rem]" placeholder="Enter buddy's contact info...">`;
+          actionHtml = `<input id="accountability${i}" class="ml-[1vw] p-[0.5vw] border rounded text-[0.9rem] dark:bg-gray-700 dark:text-gray-200" placeholder="Enter buddy's contact info...">`;
         }
         div.innerHTML = `
           <svg class="task-icon w-[5vw] h-[5vw] min-w-[20px] min-h-[20px] max-w-[30px] max-h-[30px] text-${severity === 'mild' ? 'green' : severity === 'moderate' ? 'yellow' : 'red'}-500" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10" fill="currentColor"/>
             <path d="M10 15l-3-3 1.5-1.5L10 12l5-5 1.5 1.5z" fill="white"/>
           </svg>
-          <p class="text-gray-700 text-[0.9rem] sm:text-[1rem]">${task.text}</p>
+          <p class="text-gray-700 text-[0.9rem] sm:text-[1rem] dark:text-gray-300">${task.text}</p>
           ${actionHtml}`;
         tasksEl.appendChild(div);
+        // Restore notepad state
+        if (task.action === 'notepad' && notepadStates[taskId]) {
+          const notepadList = document.getElementById(`notepadList${i}`);
+          notepadStates[taskId].forEach(value => {
+            const div = document.createElement('div');
+            div.className = 'flex items-center space-x-[1vw] mt-[0.5vh]';
+            div.innerHTML = `<span class="text-[0.9rem]">${value}</span>`;
+            notepadList.appendChild(div);
+          });
+        }
       });
       document.getElementById('result-screen').classList.remove('hidden');
       document.getElementById('result-screen').classList.add('fade-in');
-    }
-
-    function resetQuiz() {
-      current = total = 0;
-      currentActiveTask = null;
-      notepadStates = {};
-      stopAllTimers();
-      document.getElementById('loader').classList.add('loader-hidden');
-      document.getElementById('result-screen').classList.add('hidden');
-      document.getElementById('quiz').classList.remove('hidden');
-      document.getElementById('quiz').classList.add('fade-in');
-      loadQuestion();
     }
 
     function stopAllTimers() {
@@ -315,11 +466,13 @@
 
     // Meditation
     function startMeditation(index) {
-      if (currentActiveTask !== null) return;
-      currentActiveTask = `meditation${index}`;
+      const taskId = `meditation${index}`;
+      if (currentActiveTask !== null || completedTasks.includes(taskId)) return;
+      currentActiveTask = taskId;
       disableTaskButtons(index);
       const timerDiv = document.getElementById(`meditationTimer${index}`);
       const display = document.getElementById(`meditationDisplay${index}`);
+      const button = timerDiv.previousElementSibling;
       timerDiv.classList.remove('hidden');
       document.getElementById('startSound').play();
       document.getElementById('meditationMusic').play();
@@ -327,6 +480,10 @@
         document.getElementById('meditationMusic').pause();
         document.getElementById('meditationMusic').currentTime = 0;
         document.getElementById('endSound').play();
+        document.getElementById('rewardSound').play();
+        triggerPartyPopper(timerDiv);
+        updateXP(xpPerTask);
+        markTaskCompleted(taskId, button);
         timerDiv.classList.add('hidden');
         currentActiveTask = null;
         enableTaskButtons();
@@ -344,31 +501,37 @@
 
     // Pomodoro
     function startPomodoro(index) {
-      if (currentActiveTask !== null) return;
-      currentActiveTask = `pomodoro${index}`;
+      const taskId = `pomodoro${index}`;
+      if (currentActiveTask !== null || completedTasks.includes(taskId)) return;
+      currentActiveTask = taskId;
       disableTaskButtons(index);
       const timerDiv = document.getElementById(`pomodoroTimer${index}`);
       const display = document.getElementById(`pomodoroDisplay${index}`);
+      const button = timerDiv.previousElementSibling;
       timerDiv.classList.remove('hidden');
       pomodoroPhase = 'focus';
       pomodoroCycles = 0;
-      runPomodoro(index, display, timerDiv);
+      runPomodoro(index, display, timerDiv, button);
     }
 
-    function runPomodoro(index, display, timerDiv) {
+    function runPomodoro(index, display, timerDiv, button) {
       const duration = pomodoroPhase === 'focus' ? 1500 : 300;
       document.getElementById('startSound').play();
       startTimer(duration, display, () => {
         document.getElementById('endSound').play();
         if (pomodoroPhase === 'focus') {
           pomodoroPhase = 'break';
-          runPomodoro(index, display, timerDiv);
+          runPomodoro(index, display, timerDiv, button);
         } else {
           pomodoroCycles++;
           if (pomodoroCycles < 4) {
             pomodoroPhase = 'focus';
-            runPomodoro(index, display, timerDiv);
+            runPomodoro(index, display, timerDiv, button);
           } else {
+            document.getElementById('rewardSound').play();
+            triggerPartyPopper(timerDiv);
+            updateXP(xpPerTask);
+            markTaskCompleted(`pomodoro${index}`, button);
             timerDiv.classList.add('hidden');
             currentActiveTask = null;
             enableTaskButtons();
@@ -388,20 +551,26 @@
 
     // Notepad
     function saveNotepad(index) {
-      if (currentActiveTask !== null && currentActiveTask !== `notepad${index}`) return;
-      currentActiveTask = `notepad${index}`;
+      const taskId = `notepad${index}`;
+      if (currentActiveTask !== null && currentActiveTask !== taskId || completedTasks.includes(taskId)) return;
+      currentActiveTask = taskId;
       disableTaskButtons(index);
       const textarea = document.getElementById(`notepad${index}`);
       const notepadList = document.getElementById(`notepadList${index}`);
+      const button = textarea.nextElementSibling.firstElementChild;
       const value = textarea.value.trim();
-      if (value && (!notepadStates[index] || !notepadStates[index].includes(value))) {
-        notepadStates[index] = notepadStates[index] || [];
-        notepadStates[index].push(value);
+      if (value && (!notepadStates[taskId] || !notepadStates[taskId].includes(value))) {
+        notepadStates[taskId] = notepadStates[taskId] || [];
+        notepadStates[taskId].push(value);
+        localStorage.setItem('notepadStates', JSON.stringify(notepadStates));
         const div = document.createElement('div');
         div.className = 'flex items-center space-x-[1vw] mt-[0.5vh]';
         div.innerHTML = `<span class="text-[0.9rem]">${value}</span>`;
         notepadList.appendChild(div);
         document.getElementById('rewardSound').play();
+        triggerPartyPopper(notepadList);
+        updateXP(xpPerTask);
+        markTaskCompleted(taskId, button);
         textarea.value = '';
       }
       currentActiveTask = null;
@@ -409,28 +578,32 @@
     }
 
     function clearNotepad(index) {
-      if (currentActiveTask !== null && currentActiveTask !== `notepad${index}`) return;
-      currentActiveTask = `notepad${index}`;
+      const taskId = `notepad${index}`;
+      if (currentActiveTask !== null && currentActiveTask !== taskId) return;
+      currentActiveTask = taskId;
       disableTaskButtons(index);
       document.getElementById(`notepad${index}`).value = '';
       document.getElementById(`notepadList${index}`).innerHTML = '';
-      notepadStates[index] = [];
+      notepadStates[taskId] = [];
+      localStorage.setItem('notepadStates', JSON.stringify(notepadStates));
       currentActiveTask = null;
       enableTaskButtons();
     }
 
     // Checklist
     function addChecklistItem(index) {
-      if (currentActiveTask !== null && currentActiveTask !== `checklist${index}`) return;
-      currentActiveTask = `checklist${index}`;
+      const taskId = `checklist${index}`;
+      if (currentActiveTask !== null && currentActiveTask !== taskId || completedTasks.includes(taskId)) return;
+      currentActiveTask = taskId;
       disableTaskButtons(index);
       const input = document.getElementById(`checklistInput${index}`);
       const checklist = document.getElementById(`checklist${index}`);
+      const button = input.nextElementSibling;
       if (input.value.trim()) {
         const div = document.createElement('div');
         div.className = 'flex items-center space-x-[1vw] mt-[0.5vh]';
         div.innerHTML = `
-          <input type="checkbox" onchange="if(this.checked) { document.getElementById('rewardSound').play(); this.parentElement.classList.add('line-through text-gray-500'); }" class="w-[4vw] h-[4vw] min-w-[16px] min-h-[16px]">
+          <input type="checkbox" onchange="if(this.checked) { document.getElementById('rewardSound').play(); triggerPartyPopper(this); updateXP(${xpPerTask}); markTaskCompleted('checklist${index}', document.getElementById('checklistInput${index}').nextElementSibling); this.parentElement.classList.add('line-through text-gray-500 dark:text-gray-400'); }" class="w-[4vw] h-[4vw] min-w-[16px] min-h-[16px]">
           <span class="text-[0.9rem]">${input.value}</span>`;
         checklist.appendChild(div);
         input.value = '';
@@ -441,15 +614,21 @@
 
     // Focus Block
     function startFocusBlock(index) {
-      if (currentActiveTask !== null) return;
-      currentActiveTask = `focusBlock${index}`;
+      const taskId = `focusBlock${index}`;
+      if (currentActiveTask !== null || completedTasks.includes(taskId)) return;
+      currentActiveTask = taskId;
       disableTaskButtons(index);
       const timerDiv = document.getElementById(`focusBlockTimer${index}`);
       const display = document.getElementById(`focusBlockDisplay${index}`);
+      const button = timerDiv.previousElementSibling;
       timerDiv.classList.remove('hidden');
       document.getElementById('startSound').play();
       startTimer(2700, display, () => {
         document.getElementById('endSound').play();
+        document.getElementById('rewardSound').play();
+        triggerPartyPopper(timerDiv);
+        updateXP(xpPerTask);
+        markTaskCompleted(taskId, button);
         timerDiv.classList.add('hidden');
         currentActiveTask = null;
         enableTaskButtons();
@@ -465,8 +644,9 @@
 
     // Micro-Task
     function startMicroTask(index) {
-      if (currentActiveTask !== null) return;
-      currentActiveTask = `microTask${index}`;
+      const taskId = `microTask${index}`;
+      if (currentActiveTask !== null || completedTasks.includes(taskId)) return;
+      currentActiveTask = taskId;
       disableTaskButtons(index);
       const timerDiv = document.getElementById(`microTaskTimer${index}`);
       const display = document.getElementById(`microTaskDisplay${index}`);
@@ -481,10 +661,14 @@
     }
 
     function completeMicroTask(index) {
-      if (currentActiveTask !== `microTask${index}`) return;
+      const taskId = `microTask${index}`;
+      if (currentActiveTask !== taskId) return;
       if (timerInterval) {
         clearInterval(timerInterval);
         document.getElementById('rewardSound').play();
+        triggerPartyPopper(document.getElementById(`microTaskTimer${index}`));
+        updateXP(xpPerTask);
+        markTaskCompleted(taskId, document.getElementById(`microTaskTimer${index}`).previousElementSibling);
         document.getElementById(`microTaskTimer${index}`).classList.add('hidden');
         currentActiveTask = null;
         enableTaskButtons();
@@ -501,27 +685,33 @@
 
     // Work-Stretch
     function startWorkStretch(index) {
-      if (currentActiveTask !== null) return;
-      currentActiveTask = `workStretch${index}`;
+      const taskId = `workStretch${index}`;
+      if (currentActiveTask !== null || completedTasks.includes(taskId)) return;
+      currentActiveTask = taskId;
       disableTaskButtons(index);
       const timerDiv = document.getElementById(`workStretchTimer${index}`);
       const display = document.getElementById(`workStretchDisplay${index}`);
+      const button = timerDiv.previousElementSibling;
       timerDiv.classList.remove('hidden');
       pomodoroPhase = 'work';
-      runWorkStretch(index, display, timerDiv);
+      runWorkStretch(index, display, timerDiv, button);
     }
 
-    function runWorkStretch(index, display, timerDiv) {
+    function runWorkStretch(index, display, timerDiv, button) {
       const duration = pomodoroPhase === 'work' ? 900 : 300;
       document.getElementById('startSound').play();
       startTimer(duration, display, () => {
         document.getElementById('endSound').play();
         if (pomodoroPhase === 'work') {
+          document.getElementById('rewardSound').play();
+          triggerPartyPopper(timerDiv);
+          updateXP(xpPerTask);
+          markTaskCompleted(`workStretch${index}`, button);
           pomodoroPhase = 'stretch';
-          runWorkStretch(index, display, timerDiv);
+          runWorkStretch(index, display, timerDiv, button);
         } else {
           pomodoroPhase = 'work';
-          runWorkStretch(index, display, timerDiv);
+          runWorkStretch(index, display, timerDiv, button);
         }
       }, () => {
         display.textContent = `${pomodoroPhase === 'work' ? 'Work' : 'Stretch'}: ${display.textContent}`;
