@@ -614,7 +614,7 @@
           } else if (task.action === 'notepad') {
             actionHtml = `
               <div class="ml-[1vw] w-full">
-                <textarea id="notepad${i}" class="w-[60vw] p-[0.5rem] border rounded text-[0.9rem] dark:bg-gray-700 dark:text-gray-200" placeholder="Jot down your to-dos..."></textarea>
+                <textarea id="notepad${i}" class="w-full max-w-[300px] h-[80px] resize-none p-[0.5rem] border rounded text-[0.9rem] dark:bg-gray-700 dark:text-gray-200" placeholder="Jot down your to-dos..."></textarea>
                 <div class="flex space-x-[1vw] mt-[0.5vh]">
                   <button id="notepad-save-${i}" class="py-[0.5rem] px-[1rem] bg-blue-500 text-white rounded hover:bg-blue-600 ${isCompleted ? 'disabled completed' : ''}">${isCompleted ? 'Completed' : 'Save'}</button>
                   <button id="notepad-clear-${i}" class="py-[0.5rem] px-[1rem] bg-gray-500 text-white rounded hover:bg-gray-600">Clear</button>
