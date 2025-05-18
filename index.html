@@ -253,6 +253,7 @@
       let completedTasks = [];
       let quizState = null;
       let userId = null;
+      let darkMode = false;
 
       // Detect if device is mobile
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -302,13 +303,13 @@
       }
 
       function toggleDarkMode() {
-        const isDark = document.getElementById('darkModeToggle').checked;
-        document.getElementById('body').classList.toggle('dark', isDark);
-        document.getElementById('app').classList.toggle('bg-gray-900', isDark);
-        document.getElementById('app').classList.toggle('bg-white', !isDark);
-        document.getElementById('app').classList.toggle('text-gray-200', isDark);
-        document.getElementById('app').classList.toggle('text-gray-800', !isDark);
-        localStorage.setItem('darkMode', isDark);
+        darkMode = document.getElementById('darkModeToggle').checked;
+        document.getElementById('body').classList.toggle('dark', darkMode);
+        document.getElementById('app').classList.toggle('bg-gray-900', darkMode);
+        document.getElementById('app').classList.toggle('bg-white', !darkMode);
+        document.getElementById('app').classList.toggle('text-gray-200', darkMode);
+        document.getElementById('app').classList.toggle('text-gray-800', !darkMode);
+        saveUserData();
       }
 
       function openSettings() {
@@ -372,7 +373,14 @@
           completedTasks = userData.completedTasks || [];
           notepadStates = userData.notepadStates || {};
           xp = userData.xp || 0;
+          darkMode = userData.darkMode || false;
           level = Math.floor(xp / xpPerLevel) + 1;
+          document.getElementById('darkModeToggle').checked = darkMode;
+          document.getElementById('body').classList.toggle('dark', darkMode);
+          document.getElementById('app').classList.toggle('bg-gray-900', darkMode);
+          document.getElementById('app').classList.toggle('bg-white', !darkMode);
+          document.getElementById('app').classList.toggle('text-gray-200', darkMode);
+          document.getElementById('app').classList.toggle('text-gray-800', !darkMode);
           document.getElementById('login').classList.add('hidden');
           console.log("Quiz state:", quizState);
           if (quizState) {
@@ -398,7 +406,8 @@
             quizState,
             completedTasks,
             notepadStates,
-            xp
+            xp,
+            darkMode
           }, { merge: true });
           console.log("User data saved successfully");
         } catch (error) {
@@ -408,14 +417,6 @@
 
       window.onload = () => {
         console.log("Window loaded, setting up app");
-        const isDark = localStorage.getItem('darkMode') === 'true';
-        document.getElementById('darkModeToggle').checked = isDark;
-        document.getElementById('body').classList.toggle('dark', isDark);
-        document.getElementById('app').classList.toggle('bg-gray-900', isDark);
-        document.getElementById('app').classList.toggle('bg-white', !isDark);
-        document.getElementById('app').classList.toggle('text-gray-200', isDark);
-        document.getElementById('app').classList.toggle('text-gray-800', !isDark);
-
         // Preload sounds
         Object.values(sounds).forEach(sound => {
           sound.load();
@@ -446,7 +447,7 @@
         console.log("Starting quiz");
         document.getElementById('loader').classList.add('loader-hidden');
         setTimeout(() => {
-          document.getElementById('quiz').classList.remove('hidden");
+          document.getElementById('quiz').classList.remove('hidden');
           document.getElementById('quiz').classList.add('fade-in');
           loadQuestion();
         }, 1500);
@@ -542,7 +543,7 @@
             button.classList.add('disabled', 'completed');
             button.textContent = 'Completed';
           }
-          playSound('reward'); // Play reward sound on task completion
+          playSound('reward');
           checkAllTasksCompleted();
         }
         console.log("Task completed:", taskId);
@@ -583,7 +584,7 @@
         }
         const scoreEl = document.getElementById('score');
         scoreEl.textContent = `Focus Score: ${percent}%`;
-        scoreEl.className = `quiz-result text-[1.5rem] sm:text-[2rem] font-bold text-center mb-[2vh DISABLED fade-in ${percent < 40 ? 'text-green-500' : percent <= 70 ? 'text-yellow-500' : 'text-red-500'}`;
+        scoreEl.className = `quiz-result text-[1.5rem] sm:text-[2rem] font-bold text-center mb-[2vh] fade-in ${percent < 40 ? 'text-green-500' : percent <= 70 ? 'text-yellow-500' : 'text-red-500'}`;
         updateXP(0);
 
         const tasksEl = document.getElementById('tasks');
@@ -648,7 +649,7 @@
               </div>`;
           } else if (task.action === 'workStretch') {
             actionHtml = `
-              <button id="workStretch-start-${i}" class="ml->[1vw] py-[0.5rem] px-[1rem] bg-blue-500 text-white rounded hover:bg-blue-600 ${isCompleted ? 'disabled completed' : ''}">${isCompleted ? 'Completed' : 'Start'}</button>
+              <button id="workStretch-start-${i}" class="ml-[1vw] py-[0.5rem] px-[1rem] bg-blue-500 text-white rounded hover:bg-blue-600 ${isCompleted ? 'disabled completed' : ''}">${isCompleted ? 'Completed' : 'Start'}</button>
               <div id="workStretchTimer${i}" class="hidden ml-[1vw]">
                 <span id="workStretchDisplay${i}" class="text-[0.9rem]"></span>
                 <button id="workStretch-stop-${i}" class="ml-[1vw] py-[0.5rem] px-[1rem] bg-red-500 text-white rounded hover:bg-red-600">Stop</button>
@@ -676,7 +677,6 @@
             });
           }
 
-          // Attach event listeners dynamically
           if (task.action === 'meditation') {
             const startBtn = document.getElementById(`meditation-start-${i}`);
             const stopBtn = document.getElementById(`meditation-stop-${i}`);
@@ -729,7 +729,7 @@
       function stopAllTimers() {
         clearInterval(timerInterval);
         document.querySelectorAll('[id^="meditationTimer"],[id^="pomodoroTimer"],[id^="focusBlockTimer"],[id^="microTaskTimer"],[id^="workStretchTimer"]').forEach(el => el.classList.add('hidden'));
-        stopSound('meditation'); // Stop meditation music if playing
+        stopSound('meditation');
         currentActiveTask = null;
         enableTaskButtons();
       }
@@ -743,13 +743,13 @@
         const display = document.getElementById(`meditationDisplay${index}`);
         const button = document.getElementById(`meditation-start-${index}`);
         timerDiv.classList.remove('hidden');
-        playSound('start'); // Play start sound
-        playSound('meditation'); // Start meditation music
+        playSound('start');
+        playSound('meditation');
         startTimer(300, display, () => {
           triggerPartyPopper(timerDiv);
           updateXP(xpPerTask);
           markTaskCompleted(taskId, button);
-          stopSound('meditation'); // Stop meditation music
+          stopSound('meditation');
           timerDiv.classList.add('hidden');
           currentActiveTask = null;
           enableTaskButtons();
@@ -760,8 +760,8 @@
       function stopMeditation(index) {
         clearInterval(timerInterval);
         document.getElementById(`meditationTimer${index}`).classList.add('hidden');
-        stopSound('meditation'); // Stop meditation music
-        playSound('end'); // Play end sound
+        stopSound('meditation');
+        playSound('end');
         currentActiveTask = null;
         enableTaskButtons();
         console.log("Meditation stopped, index:", index);
@@ -776,7 +776,7 @@
         const display = document.getElementById(`pomodoroDisplay${index}`);
         const button = document.getElementById(`pomodoro-start-${index}`);
         timerDiv.classList.remove('hidden');
-        playSound('start'); // Play start sound
+        playSound('start');
         pomodoroPhase = 'focus';
         pomodoroCycles = 0;
         runPomodoro(index, display, timerDiv, button);
@@ -811,7 +811,7 @@
       function stopPomodoro(index) {
         clearInterval(timerInterval);
         document.getElementById(`pomodoroTimer${index}`).classList.add('hidden');
-        playSound('end'); // Play end sound
+        playSound('end');
         currentActiveTask = null;
         enableTaskButtons();
         console.log("Pomodoro stopped, index:", index);
@@ -908,7 +908,7 @@
         const display = document.getElementById(`focusBlockDisplay${index}`);
         const button = document.getElementById(`focusBlock-start-${index}`);
         timerDiv.classList.remove('hidden');
-        playSound('start'); // Play start sound
+        playSound('start');
         startTimer(2700, display, () => {
           triggerPartyPopper(timerDiv);
           updateXP(xpPerTask);
@@ -923,7 +923,7 @@
       function stopFocusBlock(index) {
         clearInterval(timerInterval);
         document.getElementById(`focusBlockTimer${index}`).classList.add('hidden');
-        playSound('end'); // Play end sound
+        playSound('end');
         currentActiveTask = null;
         enableTaskButtons();
         console.log("Focus block stopped, index:", index);
@@ -937,7 +937,7 @@
         const timerDiv = document.getElementById(`microTaskTimer${index}`);
         const display = document.getElementById(`microTaskDisplay${index}`);
         timerDiv.classList.remove('hidden');
-        playSound('start'); // Play start sound
+        playSound('start');
         startTimer(300, display, () => {
           timerDiv.classList.add('hidden');
           currentActiveTask = null;
@@ -968,7 +968,7 @@
         if (currentActiveTask !== taskId) return;
         clearInterval(timerInterval);
         document.getElementById(`microTaskTimer${index}`).classList.add('hidden');
-        playSound('end'); // Play end sound
+        playSound('end');
         currentActiveTask = null;
         enableTaskButtons();
         console.log("Micro-task stopped, index:", index);
@@ -983,7 +983,7 @@
         const display = document.getElementById(`workStretchDisplay${index}`);
         const button = document.getElementById(`workStretch-start-${index}`);
         timerDiv.classList.remove('hidden');
-        playSound('start'); // Play start sound
+        playSound('start');
         pomodoroPhase = 'work';
         runWorkStretch(index, display, timerDiv, button);
         console.log("Work-stretch started, task:", taskId);
@@ -1012,7 +1012,7 @@
         if (currentActiveTask !== taskId) return;
         clearInterval(timerInterval);
         document.getElementById(`workStretchTimer${index}`).classList.add('hidden');
-        playSound('end'); // Play end sound
+        playSound('end');
         currentActiveTask = null;
         enableTaskButtons();
         console.log("Work-stretch stopped, index:", index);
