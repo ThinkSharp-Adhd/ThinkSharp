@@ -125,13 +125,13 @@
     </div>
   </div>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js"></script>
+  <script type="module">
+    // Import Firebase SDK modules
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+    import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js';
 
-  <script>
     // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyBlgQqPVQjAr_edKWGiVmS5hIGGCXRU9Vc",
@@ -144,11 +144,11 @@
     };
 
     // Initialize Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    const analytics = firebase.analytics();
-    const provider = new firebase.auth.GoogleAuthProvider();
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const analytics = getAnalytics(app);
+    const provider = new GoogleAuthProvider();
     console.log("Firebase initialized:", app);
 
     // Questions and tasks
@@ -256,7 +256,7 @@
     }
 
     function signOutUser() {
-      auth.signOut().then(() => {
+      signOut(auth).then(() => {
         document.getElementById('settings-modal').classList.add('hidden');
         location.reload();
       }).catch((error) => {
@@ -266,7 +266,7 @@
 
     function loginWithGoogle() {
       console.log("Starting Google Sign-In");
-      auth.signInWithPopup(provider)
+      signInWithPopup(auth, provider)
         .then((result) => {
           userId = result.user.uid;
           console.log("Signed in, userId:", userId);
@@ -287,9 +287,10 @@
       }
       try {
         console.log("Fetching user data for:", userId);
-        const userDoc = await db.collection('users').doc(userId).get();
-        console.log("User doc exists:", userDoc.exists);
-        const userData = userDoc.exists ? userDoc.data() : {};
+        const userDocRef = doc(db, 'users', userId);
+        const userDoc = await getDoc(userDocRef);
+        console.log("User doc exists:", userDoc.exists());
+        const userData = userDoc.exists() ? userDoc.data() : {};
         quizState = userData.quizState || null;
         completedTasks = userData.completedTasks || [];
         notepadStates = userData.notepadStates || {};
@@ -316,7 +317,7 @@
       }
       try {
         console.log("Saving user data for:", userId);
-        await db.collection('users').doc(userId).set({
+        await setDoc(doc(db, 'users', userId), {
           quizState,
           completedTasks,
           notepadStates,
@@ -345,7 +346,7 @@
       document.getElementById('logout-btn').addEventListener('click', signOutUser);
       document.getElementById('close-settings-btn').addEventListener('click', closeSettings);
 
-      auth.onAuthStateChanged(user => {
+      onAuthStateChanged(auth, user => {
         console.log("Auth state changed, user:", user ? user.uid : "none");
         if (user) {
           userId = user.uid;
@@ -356,16 +357,6 @@
           document.getElementById('login').classList.remove('hidden');
           document.getElementById('user-info').textContent = "Please sign in.";
         }
-      });
-
-      console.log("Defined functions:", {
-        startMicroTask: typeof startMicroTask,
-        startWorkStretch: typeof startWorkStretch,
-        completeMicroTask: typeof completeMicroTask,
-        stopMicroTask: typeof stopMicroTask,
-        runWorkStretch: typeof runWorkStretch,
-        stopWorkStretch: typeof stopWorkStretch,
-        completeAccountability: typeof completeAccountability
       });
     };
 
@@ -481,6 +472,7 @@
 
     function resetTasks() {
       completedTasks = [];
+1631
       saveUserData();
       showResult();
       console.log("Tasks reset");
