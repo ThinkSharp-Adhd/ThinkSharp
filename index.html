@@ -149,6 +149,7 @@
     const db = getFirestore(app);
     const analytics = getAnalytics(app);
     const provider = new GoogleAuthProvider();
+    console.log("Firebase initialized:", app);
 
     // Questions and tasks
     const questions = [
@@ -201,6 +202,7 @@
         xpLevelEl.textContent = `Level ${level} - XP: ${xp % xpPerLevel}/${xpPerLevel}`;
         xpProgressEl.style.width = `${(xp % xpPerLevel) / xpPerLevel * 100}%`;
       }
+      console.log("XP updated:", xp, "Level:", level);
     }
 
     function triggerPartyPopper(targetElement) {
@@ -254,7 +256,7 @@
     }
 
     function signOutUser() {
-      auth.signOut().then(() => {
+      firebaseSignOut(auth).then(() => {
         document.getElementById('settings-modal').classList.add('hidden');
         location.reload();
       }).catch((error) => {
@@ -268,6 +270,7 @@
         .then((result) => {
           userId = result.user.uid;
           console.log("Signed in, userId:", userId);
+          document.getElementById('user-info').textContent = `Signed in as ${result.user.displayName}`;
           loadUserData();
         })
         .catch((error) => {
@@ -278,7 +281,7 @@
 
     async function loadUserData() {
       if (!userId) {
-        console.error("No userId, cannot load data");
+        console.error("No userId, starting quiz");
         startQuiz();
         return;
       }
@@ -307,31 +310,38 @@
     }
 
     async function saveUserData() {
-      if (!userId) return;
+      if (!userId) {
+        console.error("No userId, cannot save data");
+        return;
+      }
       try {
+        console.log("Saving user data for:", userId);
         await setDoc(doc(db, 'users', userId), {
           quizState,
           completedTasks,
           notepadStates,
           xp
         }, { merge: true });
+        console.log("User data saved successfully");
       } catch (error) {
         console.error("Error saving user data:", error);
       }
     }
 
     window.onload = () => {
+      console.log("Window loaded, setting up app");
       const isDark = localStorage.getItem('darkMode') === 'true';
       document.getElementById('darkModeToggle').checked = isDark;
       document.getElementById('body').classList.toggle('dark', isDark);
       document.getElementById('app').classList.toggle('bg-gray-900', isDark);
       document.getElementById('app').classList.toggle('bg-white', !isDark);
       document.getElementById('app').classList.toggle('text-gray-200', isDark);
-      document.getElementById('app').classList.toggle('text- gray-800', !isDark);
+      document.getElementById('app').classList.toggle('text-gray-800', !isDark);
 
       document.getElementById('google-sign-in').addEventListener('click', loginWithGoogle);
 
       onAuthStateChanged(auth, (user) => {
+        console.log("Auth state changed, user:", user ? user.uid : "none");
         if (user) {
           userId = user.uid;
           document.getElementById('user-info').textContent = `Signed in as ${user.displayName}`;
@@ -345,6 +355,7 @@
     };
 
     function startQuiz() {
+      console.log("Starting quiz");
       document.getElementById('loader').classList.add('loader-hidden');
       setTimeout(() => {
         document.getElementById('quiz').classList.remove('hidden');
@@ -359,6 +370,7 @@
         console.error('Question not found for index:', current);
         return;
       }
+      console.log("Loading question:", current + 1);
       document.getElementById('loader').classList.add('loader-hidden');
       const questionEl = document.getElementById('question');
       questionEl.innerHTML = `<p class="slide-in">${q.q}</p>`;
@@ -382,6 +394,7 @@
 
     function select(idx) {
       total += questions[current].scores[idx];
+      console.log("Selected option:", idx, "Score:", questions[current].scores[idx], "Total:", total);
       current++;
       if (current < questions.length) {
         loadQuestion();
@@ -436,6 +449,7 @@
         }
         checkAllTasksCompleted();
       }
+      console.log("Task completed:", taskId);
     }
 
     function checkAllTasksCompleted() {
@@ -454,9 +468,11 @@
       completedTasks = [];
       saveUserData();
       showResult();
+      console.log("Tasks reset");
     }
 
     function showResult() {
+      console.log("Showing result, total score:", total);
       document.getElementById('quiz').classList.add('hidden');
       document.getElementById('loader').classList.add('loader-hidden');
       let percent, severity;
@@ -542,7 +558,9 @@
               <button onclick="stopWorkStretch(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-red-500 text-white rounded hover:bg-red-600">Stop</button>
             </div>`;
         } else if (task.action === 'accountability') {
-          actionHtml = `<input id="accountability${i}" class="ml-[1vw] p-[0.5vw] border rounded text-[0.9rem] dark:bg-gray-700 dark:text-gray-200" placeholder="Enter buddy's contact info...">`;
+          actionHtml = `
+            <input id="accountability${i}" class="ml-[1vw] p-[0.5vw] border rounded text-[0.9rem] dark:bg-gray-700 dark:text-gray-200" placeholder="Enter buddy's contact info...">
+            <button onclick="completeAccountability(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-blue-500 text-white rounded hover:bg-blue-600 ${isCompleted ? 'disabled completed' : ''}">${isCompleted ? 'Completed' : 'Mark as Completed'}</button>`;
         }
         div.innerHTML = `
           <svg class="task-icon w-[5vw] h-[5vw] min-w-[20px] min-h-[20px] max-w-[30px] max-h-[30px] text-${severity === 'mild' ? 'green' : severity === 'moderate' ? 'yellow' : 'red'}-500" viewBox="0 0 24 24">
@@ -565,6 +583,7 @@
       document.getElementById('result-screen').classList.remove('hidden');
       document.getElementById('result-screen').classList.add('fade-in');
       checkAllTasksCompleted();
+      console.log("Result screen displayed, tasks:", quizState.tasks);
     }
 
     function stopAllTimers() {
@@ -591,6 +610,7 @@
         currentActiveTask = null;
         enableTaskButtons();
       });
+      console.log("Meditation started, task:", taskId);
     }
 
     function stopMeditation(index) {
@@ -598,6 +618,7 @@
       document.getElementById(`meditationTimer${index}`).classList.add('hidden');
       currentActiveTask = null;
       enableTaskButtons();
+      console.log("Meditation stopped, index:", index);
     }
 
     function startPomodoro(index) {
@@ -612,6 +633,7 @@
       pomodoroPhase = 'focus';
       pomodoroCycles = 0;
       runPomodoro(index, display, timerDiv, button);
+      console.log("Pomodoro started, task:", taskId);
     }
 
     function runPomodoro(index, display, timerDiv, button) {
@@ -644,6 +666,7 @@
       document.getElementById(`pomodoroTimer${index}`).classList.add('hidden');
       currentActiveTask = null;
       enableTaskButtons();
+      console.log("Pomodoro stopped, index:", index);
     }
 
     function saveNotepad(index) {
@@ -670,6 +693,7 @@
       }
       currentActiveTask = null;
       enableTaskButtons();
+      console.log("Notepad saved, task:", taskId);
     }
 
     function clearNotepad(index) {
@@ -683,6 +707,7 @@
       saveUserData();
       currentActiveTask = null;
       enableTaskButtons();
+      console.log("Notepad cleared, task:", taskId);
     }
 
     function completeWorkspace(index) {
@@ -692,6 +717,7 @@
       triggerPartyPopper(button);
       updateXP(xpPerTask);
       markTaskCompleted(taskId, button);
+      console.log("Workspace completed, task:", taskId);
     }
 
     function addChecklistItem(index) {
@@ -713,6 +739,7 @@
       }
       currentActiveTask = null;
       enableTaskButtons();
+      console.log("Checklist item added, task:", taskId);
     }
 
     function startFocusBlock(index) {
@@ -732,6 +759,7 @@
         currentActiveTask = null;
         enableTaskButtons();
       });
+      console.log("Focus block started, task:", taskId);
     }
 
     function stopFocusBlock(index) {
@@ -739,6 +767,7 @@
       document.getElementById(`focusBlockTimer${index}`).classList.add('hidden');
       currentActiveTask = null;
       enableTaskButtons();
+      console.log("Focus block stopped, index:", index);
     }
 
     function startMicroTask(index) {
@@ -754,6 +783,7 @@
         currentActiveTask = null;
         enableTaskButtons();
       });
+      console.log("Micro-task started, task:", taskId);
     }
 
     function completeMicroTask(index) {
@@ -768,14 +798,17 @@
         currentActiveTask = null;
         enableTaskButtons();
       }
+      console.log("Micro-task completed, task:", taskId);
     }
 
     function stopMicroTask(index) {
-      if (currentActiveTask !== `microTask${index}`) return;
+      const taskId = `microTask${index}`;
+      if (currentActiveTask !== taskId) return;
       clearInterval(timerInterval);
       document.getElementById(`microTaskTimer${index}`).classList.add('hidden');
       currentActiveTask = null;
       enableTaskButtons();
+      console.log("Micro-task stopped, index:", index);
     }
 
     function startWorkStretch(index) {
@@ -789,6 +822,7 @@
       timerDiv.classList.remove('hidden');
       pomodoroPhase = 'work';
       runWorkStretch(index, display, timerDiv, button);
+      console.log("Work-stretch started, task:", taskId);
     }
 
     function runWorkStretch(index, display, timerDiv, button) {
@@ -810,11 +844,26 @@
     }
 
     function stopWorkStretch(index) {
-      if (currentActiveTask !== `workStretch${index}`) return;
+      const taskId = `workStretch${index}`;
+      if (currentActiveTask !== taskId) return;
       clearInterval(timerInterval);
       document.getElementById(`workStretchTimer${index}`).classList.add('hidden');
       currentActiveTask = null;
       enableTaskButtons();
+      console.log("Work-stretch stopped, index:", index);
+    }
+
+    function completeAccountability(index) {
+      const taskId = `accountability${index}`;
+      if (completedTasks.includes(taskId)) return;
+      const input = document.getElementById(`accountability${index}`);
+      const button = input.nextElementSibling;
+      if (input.value.trim()) {
+        triggerPartyPopper(button);
+        updateXP(xpPerTask);
+        markTaskCompleted(taskId, button);
+      }
+      console.log("Accountability completed, task:", taskId);
     }
   </script>
 </body>
