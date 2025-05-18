@@ -263,9 +263,11 @@
     }
 
     function loginWithGoogle() {
+      console.log("Starting Google Sign-In");
       signInWithPopup(auth, provider)
         .then((result) => {
           userId = result.user.uid;
+          console.log("Signed in, userId:", userId);
           loadUserData();
         })
         .catch((error) => {
@@ -325,7 +327,7 @@
       document.getElementById('app').classList.toggle('bg-gray-900', isDark);
       document.getElementById('app').classList.toggle('bg-white', !isDark);
       document.getElementById('app').classList.toggle('text-gray-200', isDark);
-      document.getElementById('app').classList.toggle('text-gray-800', !isDark);
+      document.getElementById('app').classList.toggle('text- gray-800', !isDark);
 
       document.getElementById('google-sign-in').addEventListener('click', loginWithGoogle);
 
