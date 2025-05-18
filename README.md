@@ -1,4 +1,3 @@
-# ADHD
 # 🧠⚡ ThinkSharp — Focus Better. Live Smarter.
 
 Welcome to **ThinkSharp** — a simple yet powerful app made *just for people with ADHD* who want to sharpen their focus, boost their productivity, and take control of their daily routine 🔥📅
