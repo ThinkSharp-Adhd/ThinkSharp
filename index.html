@@ -7,11 +7,11 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(2vh); }
       to { opacity: 1; transform: translateY(0); }
     }
     @keyframes slideIn {
-      from { opacity: 0; transform: translateX(-20px); }
+      from { opacity: 0; transform: translateX(-2vw); }
       to { opacity: 1; transform: translateX(0); }
     }
     .fade-in { animation: fadeIn 0.5s ease-out; }
@@ -27,7 +27,7 @@
       transition: all 0.3s ease;
     }
     .task-item:hover {
-      transform: translateX(5px);
+      transform: translateX(0.5vw);
       background-color: #f3f4f6;
     }
     .loader-dot {
@@ -38,23 +38,32 @@
       0%, 100% { transform: scale(1); opacity: 0.5; }
       50% { transform: scale(1.5); opacity: 1; }
     }
+    /* High-DPI adjustments */
+    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+      .circle, .task-icon {
+        transform: scale(1.5);
+      }
+      .circle:hover, .task-item:hover .task-icon {
+        transform: scale(1.65);
+      }
+    }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
-  <div id="app" class="max-w-md w-full mx-auto p-6 bg-white rounded-xl shadow-lg">
-    <div id="loader" class="flex justify-center items-center h-64">
-      <div class="flex space-x-2">
-        <div class="w-4 h-4 bg-blue-500 rounded-full loader-dot" style="--i: 0;"></div>
-        <div class="w-4 h-4 bg-blue-500 rounded-full loader-dot" style="--i: 1;"></div>
-        <div class="w-4 h-4 bg-blue-500 rounded-full loader-dot" style="--i: 2;"></div>
+<body class="bg-gray-100 min-h-[100vh] flex items-center justify-center">
+  <div id="app" class="w-[90vw] max-w-[600px] min-w-[300px] mx-auto p-[4vw] sm:p-[2vw] bg-white rounded-xl shadow-lg">
+    <div id="loader" class="flex justify-center items-center h-[40vh] sm:h-[30vh]">
+      <div class="flex space-x-[1vw]">
+        <div class="w-[2vw] h-[2vw] min-w-[8px] min-h-[8px] bg-blue-500 rounded-full loader-dot" style="--i: 0;"></div>
+        <div class="w-[2vw] h-[2vw] min-w-[8px] min-h-[8px] bg-blue-500 rounded-full loader-dot" style="--i: 1;"></div>
+        <div class="w-[2vw] h-[2vw] min-w-[8px] min-h-[8px] bg-blue-500 rounded-full loader-dot" style="--i: 2;"></div>
       </div>
     </div>
     <div id="quiz" class="quiz-container hidden">
-      <div class="question text-lg font-semibold text-gray-800 mb-6 text-center" id="question">
+      <div class="question text-[1.2rem] sm:text-[1.5rem] font-semibold text-gray-800 mb-[2vh] text-center" id="question">
         <p>Loading...</p>
       </div>
-      <div class="options flex justify-between gap-2 mb-4" id="options"></div>
-      <div class="labels flex justify-between text-sm text-gray-600">
+      <div class="options flex flex-wrap justify-between gap-[1vw] mb-[2vh]" id="options"></div>
+      <div class="labels flex justify-between text-[0.8rem] sm:text-[0.9rem] text-gray-600">
         <span>Never</span>
         <span>Rarely</span>
         <span>Sometimes</span>
@@ -63,9 +72,9 @@
       </div>
     </div>
     <div id="result-screen" class="hidden">
-      <div class="quiz-result text-2xl font-bold text-center mb-6" id="score"></div>
-      <div class="task-list space-y-4" id="tasks"></div>
-      <button class="retake-btn mt-6 w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors" onclick="resetQuiz()">Retake Quiz</button>
+      <div class="quiz-result text-[1.5rem] sm:text-[2rem] font-bold text-center mb-[2vh]" id="score"></div>
+      <div class="task-list space-y-[1vh]" id="tasks"></div>
+      <button class="retake-btn mt-[2vh] w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-[1rem] sm:text-[1.1rem]">Retake Quiz</button>
     </div>
   </div>
 
@@ -119,7 +128,7 @@
       opts.innerHTML = '';
       ['Never', 'Rarely', 'Sometimes', 'Often', 'Always'].forEach((label, i) => {
         const c = document.createElement('div');
-        c.className = `circle w-12 h-12 rounded-full ${['bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-green-400', 'bg-blue-400'][i]} flex items-center justify-center text-white font-semibold`;
+        c.className = `circle w-[10vw] h-[10vw] min-w-[40px] min-h-[40px] max-w-[60px] max-h-[60px] rounded-full ${['bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-green-400', 'bg-blue-400'][i]} flex items-center justify-center text-white font-semibold`;
         c.setAttribute('title', label);
         c.textContent = label.charAt(0);
         c.onclick = () => select(i);
@@ -148,21 +157,21 @@
       const percent = Math.round((total / maxScore) * 100);
       const scoreEl = document.getElementById('score');
       scoreEl.textContent = `Focus Score: ${percent}%`;
-      scoreEl.className = `quiz-result text-2xl font-bold text-center mb-6 fade-in ${percent < 40 ? 'text-green-500' : percent <= 70 ? 'text-yellow-500' : 'text-red-500'}`;
+      scoreEl.className = `quiz-result text-[1.5rem] sm:text-[2rem] font-bold text-center mb-[2vh] fade-in ${percent < 40 ? 'text-green-500' : percent <= 70 ? 'text-yellow-500' : 'text-red-500'}`;
 
       let severity = percent < 40 ? 'mild' : percent <= 70 ? 'moderate' : 'severe';
       const tasksEl = document.getElementById('tasks');
       tasksEl.innerHTML = '';
       tasksBySeverity[severity].forEach((txt, i) => {
         const div = document.createElement('div');
-        div.className = 'task-item flex items-center space-x-2 slide-in';
+        div.className = 'task-item flex items-center space-x-[1vw] slide-in';
         div.style.animationDelay = `${i * 0.2}s`;
         div.innerHTML = `
-          <svg class="task-icon w-6 h-6 text-${severity === 'mild' ? 'green' : severity === 'moderate' ? 'yellow' : 'red'}-500" viewBox="0 0 24 24">
+          <svg class="task-icon w-[5vw] h-[5vw] min-w-[20px] min-h-[20px] max-w-[30px] max-h-[30px] text-${severity === 'mild' ? 'green' : severity === 'moderate' ? 'yellow' : 'red'}-500" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10" fill="currentColor"/>
             <path d="M10 15l-3-3 1.5-1.5L10 12l5-5 1.5 1.5z" fill="white"/>
           </svg>
-          <p class="text-gray-700">${txt}</p>`;
+          <p class="text-gray-700 text-[0.9rem] sm:text-[1rem]">${txt}</p>`;
         tasksEl.appendChild(div);
       });
       document.getElementById('result-screen').classList.remove('hidden');
