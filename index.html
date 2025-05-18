@@ -46,10 +46,13 @@
         transform: scale(1.65);
       }
     }
-    /* Ensure loader is hidden */
     .loader-hidden {
       display: none !important;
       animation: none !important;
+    }
+    .disabled {
+      opacity: 0.5;
+      pointer-events: none;
     }
   </style>
 </head>
@@ -118,9 +121,10 @@
     let timerInterval = null;
     let pomodoroPhase = 'focus';
     let pomodoroCycles = 0;
+    let currentActiveTask = null;
+    let notepadStates = {};
 
     window.onload = () => {
-      // Ensure loader is hidden initially in case of duplicate rendering
       document.getElementById('loader').classList.add('loader-hidden');
       setTimeout(() => {
         document.getElementById('loader').classList.add('loader-hidden');
@@ -136,7 +140,6 @@
         console.error('Question not found for index:', current);
         return;
       }
-      // Force hide loader again to prevent stuck animations
       document.getElementById('loader').classList.add('loader-hidden');
       const questionEl = document.getElementById('question');
       questionEl.innerHTML = `<p class="slide-in">${q.q}</p>`;
@@ -189,6 +192,19 @@
       }, 1000);
     }
 
+    function disableTaskButtons(exceptIndex = null) {
+      document.querySelectorAll('.task-item button:not(.retake-btn)').forEach(btn => {
+        if (exceptIndex !== null && btn.parentElement.id.includes(`${exceptIndex}`)) return;
+        btn.classList.add('disabled');
+      });
+    }
+
+    function enableTaskButtons() {
+      document.querySelectorAll('.task-item button').forEach(btn => {
+        btn.classList.remove('disabled');
+      });
+    }
+
     function showResult() {
       document.getElementById('quiz').classList.add('hidden');
       document.getElementById('loader').classList.add('loader-hidden');
@@ -221,8 +237,14 @@
             </div>`;
         } else if (task.action === 'notepad') {
           actionHtml = `
-            <textarea id="notepad${i}" class="ml-[1vw] w-[60vw] p-[1vw] border rounded text-[0.9rem]" placeholder="Jot down your to-dos..."></textarea>
-            <button onclick="saveNotepad(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-blue-500 text-white rounded hover:bg-blue-600">Save</button>`;
+            <div class="ml-[1vw] w-full">
+              <textarea id="notepad${i}" class="w-[60vw] p-[1vw] border rounded text-[0.9rem]" placeholder="Jot down your to-dos..."></textarea>
+              <div class="flex space-x-[1vw] mt-[0.5vh]">
+                <button onclick="saveNotepad(${i})" class="py-[0.5vh] px-[1vw] bg-blue-500 text-white rounded hover:bg-blue-600">Save</button>
+                <button onclick="clearNotepad(${i})" class="py-[0.5vh] px-[1vw] bg-gray-500 text-white rounded hover:bg-gray-600">Clear</button>
+              </div>
+              <div id="notepadList${i}" class="mt-[1vh] text-[0.9rem]"></div>
+            </div>`;
         } else if (task.action === 'workspace') {
           actionHtml = `<p class="ml-[1vw] text-[0.9rem] italic">Clear your desk and silence notifications!</p>`;
         } else if (task.action === 'checklist') {
@@ -272,6 +294,8 @@
 
     function resetQuiz() {
       current = total = 0;
+      currentActiveTask = null;
+      notepadStates = {};
       stopAllTimers();
       document.getElementById('loader').classList.add('loader-hidden');
       document.getElementById('result-screen').classList.add('hidden');
@@ -285,10 +309,15 @@
       document.getElementById('meditationMusic').pause();
       document.getElementById('meditationMusic').currentTime = 0;
       document.querySelectorAll('[id^="meditationTimer"],[id^="pomodoroTimer"],[id^="focusBlockTimer"],[id^="microTaskTimer"],[id^="workStretchTimer"]').forEach(el => el.classList.add('hidden'));
+      currentActiveTask = null;
+      enableTaskButtons();
     }
 
     // Meditation
     function startMeditation(index) {
+      if (currentActiveTask !== null) return;
+      currentActiveTask = `meditation${index}`;
+      disableTaskButtons(index);
       const timerDiv = document.getElementById(`meditationTimer${index}`);
       const display = document.getElementById(`meditationDisplay${index}`);
       timerDiv.classList.remove('hidden');
@@ -299,6 +328,8 @@
         document.getElementById('meditationMusic').currentTime = 0;
         document.getElementById('endSound').play();
         timerDiv.classList.add('hidden');
+        currentActiveTask = null;
+        enableTaskButtons();
       });
     }
 
@@ -307,10 +338,15 @@
       document.getElementById('meditationMusic').pause();
       document.getElementById('meditationMusic').currentTime = 0;
       document.getElementById(`meditationTimer${index}`).classList.add('hidden');
+      currentActiveTask = null;
+      enableTaskButtons();
     }
 
     // Pomodoro
     function startPomodoro(index) {
+      if (currentActiveTask !== null) return;
+      currentActiveTask = `pomodoro${index}`;
+      disableTaskButtons(index);
       const timerDiv = document.getElementById(`pomodoroTimer${index}`);
       const display = document.getElementById(`pomodoroDisplay${index}`);
       timerDiv.classList.remove('hidden');
@@ -334,6 +370,8 @@
             runPomodoro(index, display, timerDiv);
           } else {
             timerDiv.classList.add('hidden');
+            currentActiveTask = null;
+            enableTaskButtons();
           }
         }
       }, () => {
@@ -344,34 +382,68 @@
     function stopPomodoro(index) {
       clearInterval(timerInterval);
       document.getElementById(`pomodoroTimer${index}`).classList.add('hidden');
+      currentActiveTask = null;
+      enableTaskButtons();
     }
 
     // Notepad
     function saveNotepad(index) {
+      if (currentActiveTask !== null && currentActiveTask !== `notepad${index}`) return;
+      currentActiveTask = `notepad${index}`;
+      disableTaskButtons(index);
       const textarea = document.getElementById(`notepad${index}`);
-      if (textarea.value.trim()) {
+      const notepadList = document.getElementById(`notepadList${index}`);
+      const value = textarea.value.trim();
+      if (value && (!notepadStates[index] || !notepadStates[index].includes(value))) {
+        notepadStates[index] = notepadStates[index] || [];
+        notepadStates[index].push(value);
+        const div = document.createElement('div');
+        div.className = 'flex items-center space-x-[1vw] mt-[0.5vh]';
+        div.innerHTML = `<span class="text-[0.9rem]">${value}</span>`;
+        notepadList.appendChild(div);
         document.getElementById('rewardSound').play();
-        alert('To-dos saved!');
+        textarea.value = '';
       }
+      currentActiveTask = null;
+      enableTaskButtons();
+    }
+
+    function clearNotepad(index) {
+      if (currentActiveTask !== null && currentActiveTask !== `notepad${index}`) return;
+      currentActiveTask = `notepad${index}`;
+      disableTaskButtons(index);
+      document.getElementById(`notepad${index}`).value = '';
+      document.getElementById(`notepadList${index}`).innerHTML = '';
+      notepadStates[index] = [];
+      currentActiveTask = null;
+      enableTaskButtons();
     }
 
     // Checklist
     function addChecklistItem(index) {
+      if (currentActiveTask !== null && currentActiveTask !== `checklist${index}`) return;
+      currentActiveTask = `checklist${index}`;
+      disableTaskButtons(index);
       const input = document.getElementById(`checklistInput${index}`);
       const checklist = document.getElementById(`checklist${index}`);
       if (input.value.trim()) {
         const div = document.createElement('div');
         div.className = 'flex items-center space-x-[1vw] mt-[0.5vh]';
         div.innerHTML = `
-          <input type="checkbox" onchange="if(this.checked) document.getElementById('rewardSound').play();" class="w-[4vw] h-[4vw] min-w-[16px] min-h-[16px]">
+          <input type="checkbox" onchange="if(this.checked) { document.getElementById('rewardSound').play(); this.parentElement.classList.add('line-through text-gray-500'); }" class="w-[4vw] h-[4vw] min-w-[16px] min-h-[16px]">
           <span class="text-[0.9rem]">${input.value}</span>`;
         checklist.appendChild(div);
         input.value = '';
       }
+      currentActiveTask = null;
+      enableTaskButtons();
     }
 
     // Focus Block
     function startFocusBlock(index) {
+      if (currentActiveTask !== null) return;
+      currentActiveTask = `focusBlock${index}`;
+      disableTaskButtons(index);
       const timerDiv = document.getElementById(`focusBlockTimer${index}`);
       const display = document.getElementById(`focusBlockDisplay${index}`);
       timerDiv.classList.remove('hidden');
@@ -379,16 +451,23 @@
       startTimer(2700, display, () => {
         document.getElementById('endSound').play();
         timerDiv.classList.add('hidden');
+        currentActiveTask = null;
+        enableTaskButtons();
       });
     }
 
     function stopFocusBlock(index) {
       clearInterval(timerInterval);
       document.getElementById(`focusBlockTimer${index}`).classList.add('hidden');
+      currentActiveTask = null;
+      enableTaskButtons();
     }
 
     // Micro-Task
     function startMicroTask(index) {
+      if (currentActiveTask !== null) return;
+      currentActiveTask = `microTask${index}`;
+      disableTaskButtons(index);
       const timerDiv = document.getElementById(`microTaskTimer${index}`);
       const display = document.getElementById(`microTaskDisplay${index}`);
       timerDiv.classList.remove('hidden');
@@ -396,24 +475,35 @@
       startTimer(300, display, () => {
         document.getElementById('endSound').play();
         timerDiv.classList.add('hidden');
+        currentActiveTask = null;
+        enableTaskButtons();
       });
     }
 
     function completeMicroTask(index) {
+      if (currentActiveTask !== `microTask${index}`) return;
       if (timerInterval) {
         clearInterval(timerInterval);
         document.getElementById('rewardSound').play();
         document.getElementById(`microTaskTimer${index}`).classList.add('hidden');
+        currentActiveTask = null;
+        enableTaskButtons();
       }
     }
 
     function stopMicroTask(index) {
+      if (currentActiveTask !== `microTask${index}`) return;
       clearInterval(timerInterval);
       document.getElementById(`microTaskTimer${index}`).classList.add('hidden');
+      currentActiveTask = null;
+      enableTaskButtons();
     }
 
     // Work-Stretch
     function startWorkStretch(index) {
+      if (currentActiveTask !== null) return;
+      currentActiveTask = `workStretch${index}`;
+      disableTaskButtons(index);
       const timerDiv = document.getElementById(`workStretchTimer${index}`);
       const display = document.getElementById(`workStretchDisplay${index}`);
       timerDiv.classList.remove('hidden');
@@ -439,8 +529,11 @@
     }
 
     function stopWorkStretch(index) {
+      if (currentActiveTask !== `workStretch${index}`) return;
       clearInterval(timerInterval);
       document.getElementById(`workStretchTimer${index}`).classList.add('hidden');
+      currentActiveTask = null;
+      enableTaskButtons();
     }
   </script>
 </body>
