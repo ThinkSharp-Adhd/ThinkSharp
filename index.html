@@ -27,45 +27,45 @@
     <div id="result-screen" style="display:none;">
       <div class="quiz-result" id="score"></div>
       <div class="task-list" id="tasks"></div>
-      <button onclick="resetQuiz()">Retake Quiz</button>
+      <button class="retake-btn" onclick="resetQuiz()">Retake Quiz</button>
     </div>
   </div>
 
   <script>
     const questions = [
-      { q: "You find it hard to sit still for long periods.", scores: [0,1,2,3] },
-      { q: "You get distracted easily during tasks.", scores: [0,1,2,3] },
-      { q: "You have trouble organizing tasks or activities.", scores: [0,1,2,3] },
-      { q: "You frequently forget things like appointments or obligations.", scores: [0,1,2,3] },
-      { q: "You feel like your thoughts are racing and hard to control.", scores: [0,1,2,3] }
+      { q: "You find it hard to sit still for long periods.", scores: [0,1,2,3,4] },
+      { q: "You get distracted easily during tasks.", scores: [0,1,2,3,4] },
+      { q: "You have trouble organizing tasks or activities.", scores: [0,1,2,3,4] },
+      { q: "You frequently forget things like appointments or obligations.", scores: [0,1,2,3,4] },
+      { q: "You feel like your thoughts are racing and hard to control.", scores: [0,1,2,3,4] }
     ];
     const tasksBySeverity = {
       mild: [
         "Try a 5-minute mindfulness breathing exercise after each task.",
-        "Use a timer (Pomodoro) for 25 minutes, then rest.",
-        "Keep a notepad handy for quick to-dos."
+        "Use a Pomodoro timer: 25 minutes focus, 5 minutes break.",
+        "Keep a notepad for quick jotting of to-dos."
       ],
       moderate: [
         "Designate a distraction-free workspace with minimal stimuli.",
         "Create a daily checklist each morning and tick off items.",
-        "Use focus apps to block distracting sites for 45 minutes."
+        "Use a focus-blocking app for 45-minute sessions."
       ],
       severe: [
         "Break tasks into 5-minute micro-tasks and reward yourself after each.",
-        "Schedule structured breaks: 15 minutes work / 5 minutes move/stretch.",
-        "Seek accountability: pair up with a study buddy and check in every hour."
+        "Schedule structured cycles: 15 minutes work / 5 minutes move/stretch.",
+        "Pair with an accountability buddy and check in hourly."
       ]
     };
 
     let current = 0, total = 0;
-    const maxScore = questions.length * 3;
+    const maxScore = questions.length * 4;
 
     window.onload = () => {
       setTimeout(() => {
         document.getElementById('loader').style.display = 'none';
         document.getElementById('quiz').style.display = 'block';
         loadQuestion();
-      }, 2000);
+      }, 1500);
     };
 
     function loadQuestion() {
@@ -76,13 +76,14 @@
       ['Never','Rarely','Sometimes','Often','Always'].forEach((label,i) => {
         const c = document.createElement('div');
         c.className = `circle ${['disagree1','disagree2','neutral','agree1','agree2'][i]}`;
+        c.setAttribute('title', label);
         c.onclick = () => select(i);
         opts.appendChild(c);
       });
     }
 
     function select(idx) {
-      total += questions[current].scores[idx>3?3:idx];
+      total += questions[current].scores[idx];
       current++;
       if (current < questions.length) loadQuestion();
       else showResult();
@@ -94,9 +95,10 @@
       const scoreEl = document.getElementById('score');
       scoreEl.textContent = `Focus Score: ${percent}%`;
       scoreEl.style.color = percent < 40 ? '#7CFC00' : percent <= 70 ? '#FFD700' : '#FF4500';
-      // choose tasks
+
       let severity = percent < 40 ? 'mild' : percent <= 70 ? 'moderate' : 'severe';
       const tasksEl = document.getElementById('tasks');
+      tasksEl.innerHTML = '';
       tasksBySeverity[severity].forEach(txt => {
         const div = document.createElement('div');
         div.className = 'task-item';
@@ -108,7 +110,6 @@
 
     function resetQuiz() {
       current = total = 0;
-      document.getElementById('tasks').innerHTML = '';
       document.getElementById('result-screen').style.display = 'none';
       document.getElementById('quiz').style.display = 'block';
       loadQuestion();
