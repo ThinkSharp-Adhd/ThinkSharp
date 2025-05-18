@@ -46,14 +46,6 @@
       0%, 100% { transform: scale(1); opacity: 0.5; }
       50% { transform: scale(1.5); opacity: 1; }
     }
-    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-      .circle, .task-icon {
-        transform: scale(1.5);
-      }
-      .circle:hover, .task-item:hover .task-icon {
-        transform: scale(1.65);
-      }
-    }
     .loader-hidden {
       display: none !important;
       animation: none !important;
@@ -82,7 +74,12 @@
 </head>
 <body class="bg-gray-100 min-h-[100vh] flex items-center justify-center transition-colors duration-300" id="body">
   <div id="app" class="w-[90vw] max-w-[600px] min-w-[300px] mx-auto p-[4vw] sm:p-[2vw] bg-white rounded-xl shadow-lg relative transition-colors duration-300">
-    <div id="loader" class="flex justify-center items-center h-[40vh] sm:h-[30vh]">
+    <div id="login" class="flex flex-col items-center justify-center h-[40vh] sm:h-[30vh]">
+      <h2 class="text-[1.5rem] font-semibold mb-[2vh] text-gray-800 dark:text-gray-200">Login</h2>
+      <button id="google-sign-in" class="py-[1vh] px-[2vw] bg-blue-500 text-white rounded hover:bg-blue-600">Login with Google</button>
+      <div id="user-info" class="mt-[2vh] text-[1rem] text-gray-700 dark:text-gray-300"></div>
+    </div>
+    <div id="loader" class="flex justify-center items-center h-[40vh] sm:h-[30vh] hidden">
       <div class="flex space-x-[1vw]">
         <div class="w-[2vw] h-[2vw] min-w-[8px] min-h-[8px] bg-blue-500 rounded-full loader-dot" style="--i: 0;"></div>
         <div class="w-[2vw] h-[2vw] min-w-[8px] min-h-[8px] bg-blue-500 rounded-full loader-dot" style="--i: 1;"></div>
@@ -121,6 +118,7 @@
           <input type="checkbox" id="darkModeToggle" class="w-[4vw] h-[4vw] min-w-[16px] min-h-[16px]" onchange="toggleDarkMode()">
         </div>
         <button class="w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-[1rem]" onclick="retakeQuiz()">Retake Quiz</button>
+        <button class="w-full py-[1vh] mt-[1vh] bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-[1rem]" onclick="signOut()">Logout</button>
         <button class="w-full py-[1vh] mt-[1vh] bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-[1rem]" onclick="closeSettings()">Close</button>
       </div>
     </div>
@@ -131,7 +129,32 @@
   <audio id="endSound" src="end_sound.mp3"></audio>
   <audio id="rewardSound" src="reward_sound.mp3"></audio>
 
-  <script>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBlgQqPVQjAr_edKWGiVmS5hIGGCXRU9Vc",
+      authDomain: "website-login-8697b.firebaseapp.com",
+      projectId: "website-login-8697b",
+      storageBucket: "website-login-8697b.firebasestorage.app",
+      messagingSenderId: "154630434494",
+      appId: "1:154630434494:web:1318fa05715939809938ef",
+      measurementId: "G-Y1SW4V8THL"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const analytics = getAnalytics(app);
+    const provider = new GoogleAuthProvider();
+
+    // Questions and tasks
     const questions = [
       { q: "You find it hard to sit still for long periods.", scores: [0, 1, 2, 3, 4] },
       { q: "You get distracted easily during tasks.", scores: [0, 1, 2, 3, 4] },
@@ -163,18 +186,19 @@
     let pomodoroPhase = 'focus';
     let pomodoroCycles = 0;
     let currentActiveTask = null;
-    let notepadStates = JSON.parse(localStorage.getItem('notepadStates')) || {};
-    let xp = parseInt(localStorage.getItem('xp')) || 0;
-    let level = Math.floor(xp / 100) + 1;
+    let notepadStates = {};
+    let xp = 0;
+    let level = 1;
     const xpPerTask = 10;
     const xpPerLevel = 100;
-    let completedTasks = JSON.parse(localStorage.getItem('completedTasks')) || [];
-    let quizState = JSON.parse(localStorage.getItem('quizState')) || null;
+    let completedTasks = [];
+    let quizState = null;
+    let userId = null;
 
     function updateXP(addXP = 0) {
       xp += addXP;
       level = Math.floor(xp / xpPerLevel) + 1;
-      localStorage.setItem('xp', xp);
+      saveUserData();
       const xpLevelEl = document.getElementById('xpLevel');
       const xpProgressEl = document.getElementById('xpProgress');
       if (xpLevelEl && xpProgressEl) {
@@ -225,10 +249,7 @@
       quizState = null;
       completedTasks = [];
       notepadStates = {};
-      localStorage.removeItem('quizState');
-      localStorage.removeItem('completedTasks');
-      localStorage.removeItem('notepadStates');
-      stopAllTimers();
+      saveUserData();
       document.getElementById('settings-modal').classList.add('hidden');
       document.getElementById('result-screen').classList.add('hidden');
       document.getElementById('quiz').classList.remove('hidden');
@@ -236,8 +257,55 @@
       loadQuestion();
     }
 
+    function signOut() {
+      auth.signOut().then(() => {
+        document.getElementById('settings-modal').classList.add('hidden');
+        location.reload();
+      }).catch((error) => {
+        console.error("Sign-out error:", error);
+      });
+    }
+
+    function loginWithGoogle() {
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          userId = result.user.uid;
+          loadUserData();
+        })
+        .catch((error) => {
+          console.error("Google Sign-In error:", error);
+          document.getElementById('user-info').textContent = "Login failed. Try again.";
+        });
+    }
+
+    async function loadUserData() {
+      if (!userId) return;
+      const userDoc = await getDoc(doc(db, 'users', userId));
+      const userData = userDoc.exists() ? userDoc.data() : {};
+      quizState = userData.quizState || null;
+      completedTasks = userData.completedTasks || [];
+      notepadStates = userData.notepadStates || {};
+      xp = userData.xp || 0;
+      level = Math.floor(xp / xpPerLevel) + 1;
+      document.getElementById('login').classList.add('hidden');
+      if (quizState) {
+        showResult();
+      } else {
+        startQuiz();
+      }
+    }
+
+    async function saveUserData() {
+      if (!userId) return;
+      await setDoc(doc(db, 'users', userId), {
+        quizState,
+        completedTasks,
+        notepadStates,
+        xp
+      }, { merge: true });
+    }
+
     window.onload = () => {
-      // Load dark mode preference
       const isDark = localStorage.getItem('darkMode') === 'true';
       document.getElementById('darkModeToggle').checked = isDark;
       document.getElementById('body').classList.toggle('dark', isDark);
@@ -246,21 +314,29 @@
       document.getElementById('app').classList.toggle('text-gray-200', isDark);
       document.getElementById('app').classList.toggle('text-gray-800', !isDark);
 
-      // Check for saved quiz state
-      if (quizState) {
-        document.getElementById('loader').classList.add('loader-hidden');
-        document.getElementById('quiz').classList.add('hidden');
-        showResult();
-      } else {
-        document.getElementById('loader').classList.add('loader-hidden');
-        setTimeout(() => {
+      document.getElementById('google-sign-in').addEventListener('click', loginWithGoogle);
+
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          userId = user.uid;
+          document.getElementById('user-info').textContent = `Signed in as ${user.displayName}`;
+          loadUserData();
+        } else {
           document.getElementById('loader').classList.add('loader-hidden');
-          document.getElementById('quiz').classList.remove('hidden');
-          document.getElementById('quiz').classList.add('fade-in');
-          loadQuestion();
-        }, 1500);
-      }
+          document.getElementById('login').classList.remove('hidden');
+          document.getElementById('user-info').textContent = "Please sign in.";
+        }
+      });
     };
+
+    function startQuiz() {
+      document.getElementById('loader').classList.add('loader-hidden');
+      setTimeout(() => {
+        document.getElementById('quiz').classList.remove('hidden');
+        document.getElementById('quiz').classList.add('fade-in');
+        loadQuestion();
+      }, 1500);
+    }
 
     function loadQuestion() {
       const q = questions[current];
@@ -338,12 +414,31 @@
     function markTaskCompleted(taskId, button) {
       if (!completedTasks.includes(taskId)) {
         completedTasks.push(taskId);
-        localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+        saveUserData();
         if (button) {
           button.classList.add('disabled', 'completed');
           button.textContent = 'Completed';
         }
+        checkAllTasksCompleted();
       }
+    }
+
+    function checkAllTasksCompleted() {
+      const allCompleted = quizState.tasks.every((task, i) => completedTasks.includes(`${task.action}${i}`));
+      if (allCompleted) {
+        const tasksEl = document.getElementById('tasks');
+        const refreshButton = document.createElement('button');
+        refreshButton.className = 'w-full py-[1vh] mt-[2vh] bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-[1rem]';
+        refreshButton.textContent = 'Get New Tasks';
+        refreshButton.onclick = resetTasks;
+        tasksEl.appendChild(refreshButton);
+      }
+    }
+
+    function resetTasks() {
+      completedTasks = [];
+      saveUserData();
+      showResult();
     }
 
     function showResult() {
@@ -357,7 +452,7 @@
         percent = Math.round((total / maxScore) * 100);
         severity = percent < 40 ? 'mild' : percent <= 70 ? 'moderate' : 'severe';
         quizState = { percent, severity, tasks: tasksBySeverity[severity] };
-        localStorage.setItem('quizState', JSON.stringify(quizState));
+        saveUserData();
       }
       const scoreEl = document.getElementById('score');
       scoreEl.textContent = `Focus Score: ${percent}%`;
@@ -399,7 +494,9 @@
               <div id="notepadList${i}" class="mt-[1vh] text-[0.9rem]"></div>
             </div>`;
         } else if (task.action === 'workspace') {
-          actionHtml = `<p class="ml-[1vw] text-[0.9rem] italic dark:text-gray-300">Clear your desk and silence notifications!</p>`;
+          actionHtml = `
+            <p class="ml-[1vw] text-[0.9rem] italic dark:text-gray-300">Clear your desk and silence notifications!</p>
+            <button onclick="completeWorkspace(${i})" class="ml-[1vw] py-[0.5vh] px-[1vw] bg-blue-500 text-white rounded hover:bg-blue-600 ${isCompleted ? 'disabled completed' : ''}">${isCompleted ? 'Completed' : 'Mark as Completed'}</button>`;
         } else if (task.action === 'checklist') {
           actionHtml = `
             <div class="ml-[1vw]">
@@ -440,7 +537,6 @@
           <p class="text-gray-700 text-[0.9rem] sm:text-[1rem] dark:text-gray-300">${task.text}</p>
           ${actionHtml}`;
         tasksEl.appendChild(div);
-        // Restore notepad state
         if (task.action === 'notepad' && notepadStates[taskId]) {
           const notepadList = document.getElementById(`notepadList${i}`);
           notepadStates[taskId].forEach(value => {
@@ -453,6 +549,7 @@
       });
       document.getElementById('result-screen').classList.remove('hidden');
       document.getElementById('result-screen').classList.add('fade-in');
+      checkAllTasksCompleted();
     }
 
     function stopAllTimers() {
@@ -464,7 +561,6 @@
       enableTaskButtons();
     }
 
-    // Meditation
     function startMeditation(index) {
       const taskId = `meditation${index}`;
       if (currentActiveTask !== null || completedTasks.includes(taskId)) return;
@@ -499,7 +595,6 @@
       enableTaskButtons();
     }
 
-    // Pomodoro
     function startPomodoro(index) {
       const taskId = `pomodoro${index}`;
       if (currentActiveTask !== null || completedTasks.includes(taskId)) return;
@@ -549,7 +644,6 @@
       enableTaskButtons();
     }
 
-    // Notepad
     function saveNotepad(index) {
       const taskId = `notepad${index}`;
       if (currentActiveTask !== null && currentActiveTask !== taskId || completedTasks.includes(taskId)) return;
@@ -562,7 +656,7 @@
       if (value && (!notepadStates[taskId] || !notepadStates[taskId].includes(value))) {
         notepadStates[taskId] = notepadStates[taskId] || [];
         notepadStates[taskId].push(value);
-        localStorage.setItem('notepadStates', JSON.stringify(notepadStates));
+        saveUserData();
         const div = document.createElement('div');
         div.className = 'flex items-center space-x-[1vw] mt-[0.5vh]';
         div.innerHTML = `<span class="text-[0.9rem]">${value}</span>`;
@@ -585,12 +679,21 @@
       document.getElementById(`notepad${index}`).value = '';
       document.getElementById(`notepadList${index}`).innerHTML = '';
       notepadStates[taskId] = [];
-      localStorage.setItem('notepadStates', JSON.stringify(notepadStates));
+      saveUserData();
       currentActiveTask = null;
       enableTaskButtons();
     }
 
-    // Checklist
+    function completeWorkspace(index) {
+      const taskId = `workspace${index}`;
+      if (completedTasks.includes(taskId)) return;
+      const button = document.querySelector(`#task-${index} button`);
+      document.getElementById('rewardSound').play();
+      triggerPartyPopper(button);
+      updateXP(xpPerTask);
+      markTaskCompleted(taskId, button);
+    }
+
     function addChecklistItem(index) {
       const taskId = `checklist${index}`;
       if (currentActiveTask !== null && currentActiveTask !== taskId || completedTasks.includes(taskId)) return;
@@ -612,7 +715,6 @@
       enableTaskButtons();
     }
 
-    // Focus Block
     function startFocusBlock(index) {
       const taskId = `focusBlock${index}`;
       if (currentActiveTask !== null || completedTasks.includes(taskId)) return;
@@ -642,7 +744,6 @@
       enableTaskButtons();
     }
 
-    // Micro-Task
     function startMicroTask(index) {
       const taskId = `microTask${index}`;
       if (currentActiveTask !== null || completedTasks.includes(taskId)) return;
@@ -683,7 +784,6 @@
       enableTaskButtons();
     }
 
-    // Work-Stretch
     function startWorkStretch(index) {
       const taskId = `workStretch${index}`;
       if (currentActiveTask !== null || completedTasks.includes(taskId)) return;
