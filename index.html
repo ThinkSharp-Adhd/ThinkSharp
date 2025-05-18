@@ -2,21 +2,59 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ThinkSharp: ADHD Focus Quiz</title>
-  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .fade-in { animation: fadeIn 0.5s ease-out; }
+    .slide-in { animation: slideIn 0.5s ease-out; }
+    .circle {
+      transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+    .circle:hover {
+      transform: scale(1.1);
+      cursor: pointer;
+    }
+    .task-item {
+      transition: all 0.3s ease;
+    }
+    .task-item:hover {
+      transform: translateX(5px);
+      background-color: #f3f4f6;
+    }
+    .loader-dot {
+      animation: pulse 1.5s ease-in-out infinite;
+      animation-delay: calc(0.2s * var(--i));
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.5); opacity: 1; }
+    }
+  </style>
 </head>
-<body>
-  <div id="app">
-    <div id="loader" class="loader">
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <div id="app" class="max-w-md w-full mx-auto p-6 bg-white rounded-xl shadow-lg">
+    <div id="loader" class="flex justify-center items-center h-64">
+      <div class="flex space-x-2">
+        <div class="w-4 h-4 bg-blue-500 rounded-full loader-dot" style="--i: 0;"></div>
+        <div class="w-4 h-4 bg-blue-500 rounded-full loader-dot" style="--i: 1;"></div>
+        <div class="w-4 h-4 bg-blue-500 rounded-full loader-dot" style="--i: 2;"></div>
+      </div>
     </div>
-    <div id="quiz" class="quiz-container" style="display:none;">
-      <div class="question" id="question"><p>Loading...</p></div>
-      <div class="options" id="options"></div>
-      <div class="labels">
+    <div id="quiz" class="quiz-container hidden">
+      <div class="question text-lg font-semibold text-gray-800 mb-6 text-center" id="question">
+        <p>Loading...</p>
+      </div>
+      <div class="options flex justify-between gap-2 mb-4" id="options"></div>
+      <div class="labels flex justify-between text-sm text-gray-600">
         <span>Never</span>
         <span>Rarely</span>
         <span>Sometimes</span>
@@ -24,20 +62,20 @@
         <span>Always</span>
       </div>
     </div>
-    <div id="result-screen" style="display:none;">
-      <div class="quiz-result" id="score"></div>
-      <div class="task-list" id="tasks"></div>
-      <button class="retake-btn" onclick="resetQuiz()">Retake Quiz</button>
+    <div id="result-screen" class="hidden">
+      <div class="quiz-result text-2xl font-bold text-center mb-6" id="score"></div>
+      <div class="task-list space-y-4" id="tasks"></div>
+      <button class="retake-btn mt-6 w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors" onclick="resetQuiz()">Retake Quiz</button>
     </div>
   </div>
 
   <script>
     const questions = [
-      { q: "You find it hard to sit still for long periods.", scores: [0,1,2,3,4] },
-      { q: "You get distracted easily during tasks.", scores: [0,1,2,3,4] },
-      { q: "You have trouble organizing tasks or activities.", scores: [0,1,2,3,4] },
-      { q: "You frequently forget things like appointments or obligations.", scores: [0,1,2,3,4] },
-      { q: "You feel like your thoughts are racing and hard to control.", scores: [0,1,2,3,4] }
+      { q: "You find it hard to sit still for long periods.", scores: [0, 1, 2, 3, 4] },
+      { q: "You get distracted easily during tasks.", scores: [0, 1, 2, 3, 4] },
+      { q: "You have trouble organizing tasks or activities.", scores: [0, 1, 2, 3, 4] },
+      { q: "You frequently forget things like appointments or obligations.", scores: [0, 1, 2, 3, 4] },
+      { q: "You feel like your thoughts are racing and hard to control.", scores: [0, 1, 2, 3, 4] }
     ];
     const tasksBySeverity = {
       mild: [
@@ -62,56 +100,80 @@
 
     window.onload = () => {
       setTimeout(() => {
-        document.getElementById('loader').style.display = 'none';
-        document.getElementById('quiz').style.display = 'block';
+        document.getElementById('loader').classList.add('hidden');
+        document.getElementById('quiz').classList.remove('hidden');
+        document.getElementById('quiz').classList.add('fade-in');
         loadQuestion();
       }, 1500);
     };
 
     function loadQuestion() {
       const q = questions[current];
-      document.getElementById('question').innerHTML = `<p>${q.q}</p>`;
+      if (!q) {
+        console.error('Question not found for index:', current);
+        return;
+      }
+      const questionEl = document.getElementById('question');
+      questionEl.innerHTML = `<p class="slide-in">${q.q}</p>`;
       const opts = document.getElementById('options');
       opts.innerHTML = '';
-      ['Never','Rarely','Sometimes','Often','Always'].forEach((label,i) => {
+      ['Never', 'Rarely', 'Sometimes', 'Often', 'Always'].forEach((label, i) => {
         const c = document.createElement('div');
-        c.className = `circle ${['disagree1','disagree2','neutral','agree1','agree2'][i]}`;
+        c.className = `circle w-12 h-12 rounded-full ${['bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-green-400', 'bg-blue-400'][i]} flex items-center justify-center text-white font-semibold`;
         c.setAttribute('title', label);
+        c.textContent = label.charAt(0);
         c.onclick = () => select(i);
         opts.appendChild(c);
       });
+      setTimeout(() => {
+        opts.querySelectorAll('.circle').forEach((el, i) => {
+          el.style.animationDelay = `${i * 0.1}s`;
+          el.classList.add('slide-in');
+        });
+      }, 10);
     }
 
     function select(idx) {
       total += questions[current].scores[idx];
       current++;
-      if (current < questions.length) loadQuestion();
-      else showResult();
+      if (current < questions.length) {
+        loadQuestion();
+      } else {
+        showResult();
+      }
     }
 
     function showResult() {
-      document.getElementById('quiz').style.display = 'none';
+      document.getElementById('quiz').classList.add('hidden');
       const percent = Math.round((total / maxScore) * 100);
       const scoreEl = document.getElementById('score');
       scoreEl.textContent = `Focus Score: ${percent}%`;
-      scoreEl.style.color = percent < 40 ? '#7CFC00' : percent <= 70 ? '#FFD700' : '#FF4500';
+      scoreEl.className = `quiz-result text-2xl font-bold text-center mb-6 fade-in ${percent < 40 ? 'text-green-500' : percent <= 70 ? 'text-yellow-500' : 'text-red-500'}`;
 
       let severity = percent < 40 ? 'mild' : percent <= 70 ? 'moderate' : 'severe';
       const tasksEl = document.getElementById('tasks');
       tasksEl.innerHTML = '';
-      tasksBySeverity[severity].forEach(txt => {
+      tasksBySeverity[severity].forEach((txt, i) => {
         const div = document.createElement('div');
-        div.className = 'task-item';
-        div.innerHTML = `<svg class="task-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/></svg><p>${txt}</p>`;
+        div.className = 'task-item flex items-center space-x-2 slide-in';
+        div.style.animationDelay = `${i * 0.2}s`;
+        div.innerHTML = `
+          <svg class="task-icon w-6 h-6 text-${severity === 'mild' ? 'green' : severity === 'moderate' ? 'yellow' : 'red'}-500" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" fill="currentColor"/>
+            <path d="M10 15l-3-3 1.5-1.5L10 12l5-5 1.5 1.5z" fill="white"/>
+          </svg>
+          <p class="text-gray-700">${txt}</p>`;
         tasksEl.appendChild(div);
       });
-      document.getElementById('result-screen').style.display = 'block';
+      document.getElementById('result-screen').classList.remove('hidden');
+      document.getElementById('result-screen').classList.add('fade-in');
     }
 
     function resetQuiz() {
       current = total = 0;
-      document.getElementById('result-screen').style.display = 'none';
-      document.getElementById('quiz').style.display = 'block';
+      document.getElementById('result-screen').classList.add('hidden');
+      document.getElementById('quiz').classList.remove('hidden');
+      document.getElementById('quiz').classList.add('fade-in');
       loadQuestion();
     }
   </script>
