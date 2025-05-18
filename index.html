@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ThinkSharp: ADHD Focus Quiz</title>
-  <link rel="icon" href="favicon.ico" type="image/x-icon"> <!-- Fixes favicon 404 -->
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @keyframes fadeIn {
@@ -125,11 +125,6 @@
     </div>
   </div>
 
-  <audio id="meditationMusic" src="meditation_music.mp3" loop></audio>
-  <audio id="startSound" src="start_sound.mp3"></audio>
-  <audio id="endSound" src="end_sound.mp3"></audio>
-  <audio id="rewardSound" src="reward_sound.mp3"></audio>
-
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -137,7 +132,7 @@
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 
-    // Your web app's Firebase configuration
+    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyBlgQqPVQjAr_edKWGiVmS5hIGGCXRU9Vc",
       authDomain: "website-login-8697b.firebaseapp.com",
@@ -280,30 +275,47 @@
     }
 
     async function loadUserData() {
-      if (!userId) return;
-      const userDoc = await getDoc(doc(db, 'users', userId));
-      const userData = userDoc.exists() ? userDoc.data() : {};
-      quizState = userData.quizState || null;
-      completedTasks = userData.completedTasks || [];
-      notepadStates = userData.notepadStates || {};
-      xp = userData.xp || 0;
-      level = Math.floor(xp / xpPerLevel) + 1;
-      document.getElementById('login').classList.add('hidden');
-      if (quizState) {
-        showResult();
-      } else {
+      if (!userId) {
+        console.error("No userId, cannot load data");
+        startQuiz();
+        return;
+      }
+      try {
+        console.log("Fetching user data for:", userId);
+        const userDoc = await getDoc(doc(db, 'users', userId));
+        console.log("User doc exists:", userDoc.exists());
+        const userData = userDoc.exists() ? userDoc.data() : {};
+        quizState = userData.quizState || null;
+        completedTasks = userData.completedTasks || [];
+        notepadStates = userData.notepadStates || {};
+        xp = userData.xp || 0;
+        level = Math.floor(xp / xpPerLevel) + 1;
+        document.getElementById('login').classList.add('hidden');
+        console.log("Quiz state:", quizState);
+        if (quizState) {
+          showResult();
+        } else {
+          startQuiz();
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+        document.getElementById('login').classList.add('hidden');
         startQuiz();
       }
     }
 
     async function saveUserData() {
       if (!userId) return;
-      await setDoc(doc(db, 'users', userId), {
-        quizState,
-        completedTasks,
-        notepadStates,
-        xp
-      }, { merge: true });
+      try {
+        await setDoc(doc(db, 'users', userId), {
+          quizState,
+          completedTasks,
+          notepadStates,
+          xp
+        }, { merge: true });
+      } catch (error) {
+        console.error("Error saving user data:", error);
+      }
     }
 
     window.onload = () => {
@@ -555,8 +567,6 @@
 
     function stopAllTimers() {
       clearInterval(timerInterval);
-      document.getElementById('meditationMusic').pause();
-      document.getElementById('meditationMusic').currentTime = 0;
       document.querySelectorAll('[id^="meditationTimer"],[id^="pomodoroTimer"],[id^="focusBlockTimer"],[id^="microTaskTimer"],[id^="workStretchTimer"]').forEach(el => el.classList.add('hidden'));
       currentActiveTask = null;
       enableTaskButtons();
@@ -571,13 +581,7 @@
       const display = document.getElementById(`meditationDisplay${index}`);
       const button = timerDiv.previousElementSibling;
       timerDiv.classList.remove('hidden');
-      document.getElementById('startSound').play();
-      document.getElementById('meditationMusic').play();
       startTimer(300, display, () => {
-        document.getElementById('meditationMusic').pause();
-        document.getElementById('meditationMusic').currentTime = 0;
-        document.getElementById('endSound').play();
-        document.getElementById('rewardSound').play();
         triggerPartyPopper(timerDiv);
         updateXP(xpPerTask);
         markTaskCompleted(taskId, button);
@@ -589,8 +593,6 @@
 
     function stopMeditation(index) {
       clearInterval(timerInterval);
-      document.getElementById('meditationMusic').pause();
-      document.getElementById('meditationMusic').currentTime = 0;
       document.getElementById(`meditationTimer${index}`).classList.add('hidden');
       currentActiveTask = null;
       enableTaskButtons();
@@ -612,9 +614,7 @@
 
     function runPomodoro(index, display, timerDiv, button) {
       const duration = pomodoroPhase === 'focus' ? 1500 : 300;
-      document.getElementById('startSound').play();
       startTimer(duration, display, () => {
-        document.getElementById('endSound').play();
         if (pomodoroPhase === 'focus') {
           pomodoroPhase = 'break';
           runPomodoro(index, display, timerDiv, button);
@@ -624,7 +624,6 @@
             pomodoroPhase = 'focus';
             runPomodoro(index, display, timerDiv, button);
           } else {
-            document.getElementById('rewardSound').play();
             triggerPartyPopper(timerDiv);
             updateXP(xpPerTask);
             markTaskCompleted(`pomodoro${index}`, button);
@@ -662,7 +661,6 @@
         div.className = 'flex items-center space-x-[1vw] mt-[0.5vh]';
         div.innerHTML = `<span class="text-[0.9rem]">${value}</span>`;
         notepadList.appendChild(div);
-        document.getElementById('rewardSound').play();
         triggerPartyPopper(notepadList);
         updateXP(xpPerTask);
         markTaskCompleted(taskId, button);
@@ -689,7 +687,6 @@
       const taskId = `workspace${index}`;
       if (completedTasks.includes(taskId)) return;
       const button = document.querySelector(`#task-${index} button`);
-      document.getElementById('rewardSound').play();
       triggerPartyPopper(button);
       updateXP(xpPerTask);
       markTaskCompleted(taskId, button);
@@ -707,7 +704,7 @@
         const div = document.createElement('div');
         div.className = 'flex items-center space-x-[1vw] mt-[0.5vh]';
         div.innerHTML = `
-          <input type="checkbox" onchange="if(this.checked) { document.getElementById('rewardSound').play(); triggerPartyPopper(this); updateXP(${xpPerTask}); markTaskCompleted('checklist${index}', document.getElementById('checklistInput${index}').nextElementSibling); this.parentElement.classList.add('line-through text-gray-500 dark:text-gray-400'); }" class="w-[4vw] h-[4vw] min-w-[16px] min-h-[16px]">
+          <input type="checkbox" onchange="if(this.checked) { triggerPartyPopper(this); updateXP(${xpPerTask}); markTaskCompleted('checklist${index}', document.getElementById('checklistInput${index}').nextElementSibling); this.parentElement.classList.add('line-through text-gray-500 dark:text-gray-400'); }" class="w-[4vw] h-[4vw] min-w-[16px] min-h-[16px]">
           <span class="text-[0.9rem]">${input.value}</span>`;
         checklist.appendChild(div);
         input.value = '';
@@ -725,10 +722,7 @@
       const display = document.getElementById(`focusBlockDisplay${index}`);
       const button = timerDiv.previousElementSibling;
       timerDiv.classList.remove('hidden');
-      document.getElementById('startSound').play();
       startTimer(2700, display, () => {
-        document.getElementById('endSound').play();
-        document.getElementById('rewardSound').play();
         triggerPartyPopper(timerDiv);
         updateXP(xpPerTask);
         markTaskCompleted(taskId, button);
@@ -753,9 +747,7 @@
       const timerDiv = document.getElementById(`microTaskTimer${index}`);
       const display = document.getElementById(`microTaskDisplay${index}`);
       timerDiv.classList.remove('hidden');
-      document.getElementById('startSound').play();
       startTimer(300, display, () => {
-        document.getElementById('endSound').play();
         timerDiv.classList.add('hidden');
         currentActiveTask = null;
         enableTaskButtons();
@@ -767,7 +759,6 @@
       if (currentActiveTask !== taskId) return;
       if (timerInterval) {
         clearInterval(timerInterval);
-        document.getElementById('rewardSound').play();
         triggerPartyPopper(document.getElementById(`microTaskTimer${index}`));
         updateXP(xpPerTask);
         markTaskCompleted(taskId, document.getElementById(`microTaskTimer${index}`).previousElementSibling);
@@ -800,11 +791,8 @@
 
     function runWorkStretch(index, display, timerDiv, button) {
       const duration = pomodoroPhase === 'work' ? 900 : 300;
-      document.getElementById('startSound').play();
       startTimer(duration, display, () => {
-        document.getElementById('endSound').play();
         if (pomodoroPhase === 'work') {
-          document.getElementById('rewardSound').play();
           triggerPartyPopper(timerDiv);
           updateXP(xpPerTask);
           markTaskCompleted(`workStretch${index}`, button);
