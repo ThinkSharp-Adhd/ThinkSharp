@@ -73,7 +73,7 @@ Just fork it, clone it, and let's build something great together 💻🌟
 
 ## 🔗 Live Demo / Preview
 
-> Coming soon... (or drop your Netlify/GitHub Pages link here)
+> Coming soon...
 
 ---
 
