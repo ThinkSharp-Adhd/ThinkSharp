@@ -3,218 +3,114 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ThinkSharp</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      height: 100vh;
-      background: linear-gradient(135deg, #ff5f6d, #ffc371);
-      background-size: 400% 400%;
-      animation: gradientBG 8s ease infinite;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    #quiz-container {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 20px;
-      padding: 40px;
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      text-align: center;
-      max-width: 600px;
-      width: 90%;
-      animation: fadeIn 1s ease;
-    }
-
-    h1 {
-      font-size: 2.5rem;
-      color: #fff;
-      margin-bottom: 20px;
-      animation: bounceIn 1s ease;
-    }
-
-    .question {
-      font-size: 1.5rem;
-      color: #fff;
-      margin-bottom: 30px;
-      animation: fadeIn 0.5s ease;
-    }
-
-    .option {
-      background: #ffffff;
-      border: none;
-      border-radius: 12px;
-      padding: 15px 25px;
-      margin: 10px 0;
-      font-size: 1.1rem;
-      cursor: pointer;
-      width: 100%;
-      transition: transform 0.2s, background 0.3s;
-    }
-
-    .option:hover {
-      background: #ffe066;
-      transform: scale(1.05);
-    }
-
-    .score {
-      font-size: 5rem;
-      font-weight: bold;
-      animation: pulse 1.5s infinite alternate;
-      margin-top: 20px;
-    }
-
-    #retake-btn {
-      margin-top: 20px;
-      padding: 12px 30px;
-      font-size: 1.2rem;
-      border-radius: 12px;
-      border: none;
-      background: #ffc371;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    #retake-btn:hover {
-      background: #ffb347;
-    }
-
-    @keyframes gradientBG {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes bounceIn {
-      0% { transform: scale(0.9); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      100% { transform: scale(1.08); }
-    }
-  </style>
+  <title>ThinkSharp: ADHD Focus Quiz</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="quiz-container">
-    <h1>ThinkSharp</h1>
-    <div id="quiz-content">
-      <div class="question" id="question">Loading...</div>
-      <button class="option" onclick="selectOption(0)">Option 1</button>
-      <button class="option" onclick="selectOption(1)">Option 2</button>
-      <button class="option" onclick="selectOption(2)">Option 3</button>
-      <button class="option" onclick="selectOption(3)">Option 4</button>
+  <div id="app">
+    <div id="loader" class="loader">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
     </div>
-    <div id="result" class="score" style="display:none;">0</div>
-    <button id="retake-btn" style="display:none;" onclick="resetQuiz()">Retake Quiz</button>
+    <div id="quiz" class="quiz-container" style="display:none;">
+      <div class="question" id="question"><p>Loading...</p></div>
+      <div class="options" id="options"></div>
+      <div class="labels">
+        <span>Never</span>
+        <span>Rarely</span>
+        <span>Sometimes</span>
+        <span>Often</span>
+        <span>Always</span>
+      </div>
+    </div>
+    <div id="result-screen" style="display:none;">
+      <div class="quiz-result" id="score"></div>
+      <div class="task-list" id="tasks"></div>
+      <button onclick="resetQuiz()">Retake Quiz</button>
+    </div>
   </div>
 
   <script>
     const questions = [
-      {
-        question: "You find it hard to sit still for long periods.",
-        options: ["Never", "Rarely", "Often", "Always"],
-        scores: [0, 1, 2, 3]
-      },
-      {
-        question: "You get distracted easily during tasks.",
-        options: ["Never", "Rarely", "Often", "Always"],
-        scores: [0, 1, 2, 3]
-      },
-      {
-        question: "You have trouble organizing tasks or activities.",
-        options: ["Never", "Rarely", "Often", "Always"],
-        scores: [0, 1, 2, 3]
-      },
-      {
-        question: "You frequently forget things like appointments or obligations.",
-        options: ["Never", "Rarely", "Often", "Always"],
-        scores: [0, 1, 2, 3]
-      },
-      {
-        question: "You feel like your thoughts are racing and hard to control.",
-        options: ["Never", "Rarely", "Often", "Always"],
-        scores: [0, 1, 2, 3]
-      }
+      { q: "You find it hard to sit still for long periods.", scores: [0,1,2,3] },
+      { q: "You get distracted easily during tasks.", scores: [0,1,2,3] },
+      { q: "You have trouble organizing tasks or activities.", scores: [0,1,2,3] },
+      { q: "You frequently forget things like appointments or obligations.", scores: [0,1,2,3] },
+      { q: "You feel like your thoughts are racing and hard to control.", scores: [0,1,2,3] }
     ];
+    const tasksBySeverity = {
+      mild: [
+        "Try a 5-minute mindfulness breathing exercise after each task.",
+        "Use a timer (Pomodoro) for 25 minutes, then rest.",
+        "Keep a notepad handy for quick to-dos."
+      ],
+      moderate: [
+        "Designate a distraction-free workspace with minimal stimuli.",
+        "Create a daily checklist each morning and tick off items.",
+        "Use focus apps to block distracting sites for 45 minutes."
+      ],
+      severe: [
+        "Break tasks into 5-minute micro-tasks and reward yourself after each.",
+        "Schedule structured breaks: 15 minutes work / 5 minutes move/stretch.",
+        "Seek accountability: pair up with a study buddy and check in every hour."
+      ]
+    };
 
-    let currentQuestion = 0;
-    let totalScore = 0;
-    const maxPossibleScore = questions.length * 3;
+    let current = 0, total = 0;
+    const maxScore = questions.length * 3;
 
-    // Load from localStorage if quiz completed before
     window.onload = () => {
-      const savedScore = localStorage.getItem('adhdFocusScore');
-      const completed = localStorage.getItem('adhdFocusCompleted');
-
-      if (completed === 'true' && savedScore !== null) {
-        showResult(parseInt(savedScore, 10));
-      } else {
+      setTimeout(() => {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('quiz').style.display = 'block';
         loadQuestion();
-      }
+      }, 2000);
     };
 
     function loadQuestion() {
-      const q = questions[currentQuestion];
-      document.getElementById("question").textContent = q.question;
-      const buttons = document.querySelectorAll(".option");
-      buttons.forEach((btn, idx) => {
-        btn.textContent = q.options[idx];
+      const q = questions[current];
+      document.getElementById('question').innerHTML = `<p>${q.q}</p>`;
+      const opts = document.getElementById('options');
+      opts.innerHTML = '';
+      ['Never','Rarely','Sometimes','Often','Always'].forEach((label,i) => {
+        const c = document.createElement('div');
+        c.className = `circle ${['disagree1','disagree2','neutral','agree1','agree2'][i]}`;
+        c.onclick = () => select(i);
+        opts.appendChild(c);
       });
-
-      // Make sure quiz UI is visible and result hidden
-      document.getElementById("quiz-content").style.display = "block";
-      document.getElementById("result").style.display = "none";
-      document.getElementById("retake-btn").style.display = "none";
     }
 
-    function selectOption(index) {
-      totalScore += questions[currentQuestion].scores[index];
-      currentQuestion++;
-      if (currentQuestion < questions.length) {
-        loadQuestion();
-      } else {
-        // Save and show result
-        let scorePercent = Math.round((totalScore / maxPossibleScore) * 100);
-        localStorage.setItem('adhdFocusScore', scorePercent);
-        localStorage.setItem('adhdFocusCompleted', 'true');
-        showResult(scorePercent);
-      }
+    function select(idx) {
+      total += questions[current].scores[idx>3?3:idx];
+      current++;
+      if (current < questions.length) loadQuestion();
+      else showResult();
     }
 
-    function showResult(scorePercent) {
-      document.getElementById("quiz-content").style.display = "none";
-      const resultEl = document.getElementById("result");
-      resultEl.textContent = scorePercent;
-
-      if (scorePercent < 40) {
-        resultEl.style.color = "lime";
-      } else if (scorePercent <= 70) {
-        resultEl.style.color = "gold";
-      } else {
-        resultEl.style.color = "red";
-      }
-
-      resultEl.style.display = "block";
-      document.getElementById("retake-btn").style.display = "inline-block";
+    function showResult() {
+      document.getElementById('quiz').style.display = 'none';
+      const percent = Math.round((total / maxScore) * 100);
+      const scoreEl = document.getElementById('score');
+      scoreEl.textContent = `Focus Score: ${percent}%`;
+      scoreEl.style.color = percent < 40 ? '#7CFC00' : percent <= 70 ? '#FFD700' : '#FF4500';
+      // choose tasks
+      let severity = percent < 40 ? 'mild' : percent <= 70 ? 'moderate' : 'severe';
+      const tasksEl = document.getElementById('tasks');
+      tasksBySeverity[severity].forEach(txt => {
+        const div = document.createElement('div');
+        div.className = 'task-item';
+        div.innerHTML = `<svg class="task-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/></svg><p>${txt}</p>`;
+        tasksEl.appendChild(div);
+      });
+      document.getElementById('result-screen').style.display = 'block';
     }
 
     function resetQuiz() {
-      currentQuestion = 0;
-      totalScore = 0;
-      localStorage.removeItem('adhdFocusScore');
-      localStorage.removeItem('adhdFocusCompleted');
+      current = total = 0;
+      document.getElementById('tasks').innerHTML = '';
+      document.getElementById('result-screen').style.display = 'none';
+      document.getElementById('quiz').style.display = 'block';
       loadQuestion();
     }
   </script>
