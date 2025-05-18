@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ThinkSharp: ADHD Focus Quiz</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon"> <!-- Fixes favicon 404 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @keyframes fadeIn {
@@ -118,7 +119,7 @@
           <input type="checkbox" id="darkModeToggle" class="w-[4vw] h-[4vw] min-w-[16px] min-h-[16px]" onchange="toggleDarkMode()">
         </div>
         <button class="w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-[1rem]" onclick="retakeQuiz()">Retake Quiz</button>
-        <button class="w-full py-[1vh] mt-[1vh] bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-[1rem]" onclick="signOut()">Logout</button>
+        <button class="w-full py-[1vh] mt-[1vh] bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-[1rem]" onclick="signOutUser()">Logout</button>
         <button class="w-full py-[1vh] mt-[1vh] bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-[1rem]" onclick="closeSettings()">Close</button>
       </div>
     </div>
@@ -132,7 +133,7 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 
@@ -257,7 +258,7 @@
       loadQuestion();
     }
 
-    function signOut() {
+    function signOutUser() {
       auth.signOut().then(() => {
         document.getElementById('settings-modal').classList.add('hidden');
         location.reload();
