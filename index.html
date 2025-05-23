@@ -99,12 +99,6 @@
 </head>
 <body class="bg-gray-100 min-h-[100vh] flex items-center justify-center transition-colors duration-300" id="body">
   <div id="app" class="w-[90vw] max-w-[600px] min-w-[300px] mx-auto p-[4vw] sm:p-[2vw] bg-white rounded-xl shadow-lg relative transition-colors duration-300">
-    <div id="login" class="flex flex-col items-center justify-center h-[40vh] sm:h-[30vh]">
-      <h2 class="text-[1.5rem] font-semibold mb-[2vh] text-gray-800 dark:text-gray-200">Login</h2>
-      <button id="google-sign-in" class="py-[1vh] px-[2vw] bg-blue-500 text-white rounded hover:bg-blue-600" aria-label="Login with Google">Login with Google</button>
-      <div id="user-info" class="mt-[2vh] text-[1rem] text-gray-700 dark:text-gray-300"></div>
-      <a href="/privacy-policy" class="mt-[1vh] text-[0.9rem] text-blue-500 hover:underline">Privacy Policy</a>
-    </div>
     <div id="loader" class="flex justify-center items-center h-[40vh] sm:h-[30vh] hidden">
       <div class="flex space-x-[1vw]">
         <div class="w-[2vw] h-[2vw] min-w-[8px] min-h-[8px] bg-blue-500 rounded-full loader-dot" style="--i: 0;"></div>
@@ -112,7 +106,7 @@
         <div class="w-[2vw] h-[2vw] min-w-[8px] min-h-[8px] bg-blue-500 rounded-full loader-dot" style="--i: 2;"></div>
       </div>
     </div>
-    <div id="quiz" class="quiz-container hidden">
+    <div id="quiz" class="quiz-container">
       <div class="question text-[1.2rem] sm:text-[1.5rem] font-semibold text-gray-800 mb-[2vh] text-center dark:text-gray-200" id="question">
         <p>Loading...</p>
       </div>
@@ -144,38 +138,12 @@
           <input type="checkbox" id="darkModeToggle" class="w-[4vw] h-[4vw] min-w-[16px] min-h-[16px]" aria-label="Toggle dark mode">
         </div>
         <button class="w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-[1rem]" id="retake-btn" aria-label="Retake quiz">Retake Quiz</button>
-        <button class="w-full py-[1vh] mt-[1vh] bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-[1rem]" id="logout-btn" aria-label="Logout">Logout</button>
         <button class="w-full py-[1vh] mt-[1vh] bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-[1rem]" id="close-settings-btn" aria-label="Close settings">Close</button>
       </div>
     </div>
   </div>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js"></script>
-
   <script>
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyBlgQqPVQjAr_edKWGiVmS5hIGGCXRU9Vc",
-      authDomain: "website-login-8697b.firebaseapp.com",
-      projectId: "website-login-8697b",
-      storageBucket: "website-login-8697b.firebasestorage.app",
-      messagingSenderId: "154630434494",
-      appId: "1:154630434494:web:1318fa05715939809938ef",
-      measurementId: "G-Y1SW4V8THL"
-    };
-
-    // Initialize Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    const analytics = firebase.analytics();
-    const provider = new firebase.auth.GoogleAuthProvider();
-    console.log("Firebase initialized:", app);
-
     // Questions and tasks
     const questions = [
       { q: "You find it hard to sit still for long periods.", scores: [0, 1, 2, 3, 4] },
@@ -215,7 +183,6 @@
     const xpPerLevel = 100;
     let completedTasks = [];
     let quizState = null;
-    let userId = null;
     let darkMode = false;
 
     // Detect if device is mobile
@@ -235,7 +202,6 @@
     function updateXP(addXP = 0) {
       xp += addXP;
       level = Math.floor(xp / xpPerLevel) + 1;
-      saveUserData();
       const xpLevelEl = document.getElementById('xpLevel');
       const xpProgressEl = document.getElementById('xpProgress');
       if (xpLevelEl && xpProgressEl) {
@@ -272,7 +238,6 @@
       document.getElementById('app').classList.toggle('bg-white', !darkMode);
       document.getElementById('app').classList.toggle('text-gray-200', darkMode);
       document.getElementById('app').classList.toggle('text-gray-800', !darkMode);
-      saveUserData();
     }
 
     function openSettings() {
@@ -288,7 +253,8 @@
       quizState = null;
       completedTasks = [];
       notepadStates = {};
-      saveUserData();
+      xp = 0;
+      level = 1;
       document.getElementById('settings-modal').classList.add('hidden');
       document.getElementById('result-screen').classList.add('hidden');
       document.getElementById('quiz').classList.remove('hidden');
@@ -296,109 +262,13 @@
       loadQuestion();
     }
 
-    function signOutUser() {
-      auth.signOut().then(() => {
-        document.getElementById('settings-modal').classList.add('hidden');
-        location.reload();
-      }).catch((error) => {
-        console.error("Sign-out error:", error);
-      });
-    }
-
-    function loginWithGoogle() {
-      console.log("Starting Google Sign-In");
-      auth.signInWithPopup(provider)
-        .then((result) => {
-          userId = result.user.uid;
-          console.log("Signed in, userId:", userId);
-          document.getElementById('user-info').textContent = `Signed in as ${result.user.displayName}`;
-          loadUserData();
-        })
-        .catch((error) => {
-          console.error("Google Sign-In error:", error);
-          document.getElementById('user-info').textContent = "Login failed. Try again.";
-        });
-    }
-
-    async function loadUserData() {
-      if (!userId) {
-        console.error("No userId, starting quiz");
-        startQuiz();
-        return;
-      }
-      try {
-        console.log("Fetching user data for:", userId);
-        const userDocRef = doc(db, 'users', userId);
-        const userDoc = await getDoc(userDocRef);
-        console.log("User doc exists:", userDoc.exists());
-        const userData = userDoc.exists() ? userDoc.data() : {};
-        quizState = userData.quizState || null;
-        completedTasks = userData.completedTasks || [];
-        notepadStates = userData.notepadStates || {};
-        xp = userData.xp || 0;
-        darkMode = userData.darkMode || false;
-        level = Math.floor(xp / xpPerLevel) + 1;
-        document.getElementById('darkModeToggle').checked = darkMode;
-        document.getElementById('body').classList.toggle('dark', darkMode);
-        document.getElementById('app').classList.toggle('bg-gray-900', darkMode);
-        document.getElementById('app').classList.toggle('bg-white', !darkMode);
-        document.getElementById('app').classList.toggle('text-gray-200', darkMode);
-        document.getElementById('app').classList.toggle('text-gray-800', !darkMode);
-        document.getElementById('login').classList.add('hidden');
-        console.log("Quiz state:", quizState);
-        if (quizState) {
-          showResult();
-        } else {
-          startQuiz();
-        }
-      } catch (error) {
-        console.error("Error loading user data:", error);
-        document.getElementById('login').classList.add('hidden');
-        startQuiz();
-      }
-    }
-
-    async function saveUserData() {
-      if (!userId) {
-        console.error("No userId, cannot save data");
-        return;
-      }
-      try {
-        console.log("Saving user data for:", userId);
-        await setDoc(doc(db, 'users', userId), {
-          quizState,
-          completedTasks,
-          notepadStates,
-          xp,
-          darkMode
-        }, { merge: true });
-        console.log("User data saved successfully");
-      } catch (error) {
-        console.error("Error saving user data:", error);
-      }
-    }
-
     window.onload = () => {
       console.log("Window loaded, setting up app");
-      addInteractionListener(document.getElementById('google-sign-in'), loginWithGoogle);
-      document.getElementById('darkModeToggle').addEventListener('change', toggleDarkMode);
       addInteractionListener(document.getElementById('settings-btn'), openSettings);
+      document.getElementById('darkModeToggle').addEventListener('change', toggleDarkMode);
       addInteractionListener(document.getElementById('retake-btn'), retakeQuiz);
-      addInteractionListener(document.getElementById('logout-btn'), signOutUser);
       addInteractionListener(document.getElementById('close-settings-btn'), closeSettings);
-
-      auth.onAuthStateChanged(user => {
-        console.log("Auth state changed, user:", user ? user.uid : "none");
-        if (user) {
-          userId = user.uid;
-          document.getElementById('user-info').textContent = `Signed in as ${user.displayName}`;
-          loadUserData();
-        } else {
-          document.getElementById('loader').classList.add('loader-hidden');
-          document.getElementById('login').classList.remove('hidden');
-          document.getElementById('user-info').textContent = "Please sign in.";
-        }
-      });
+      startQuiz();
     };
 
     function startQuiz() {
@@ -497,7 +367,6 @@
     function markTaskCompleted(taskId, button) {
       if (!completedTasks.includes(taskId)) {
         completedTasks.push(taskId);
-        saveUserData();
         if (button) {
           button.classList.add('disabled', 'completed');
           button.textContent = 'Completed';
@@ -522,7 +391,6 @@
 
     function resetTasks() {
       completedTasks = [];
-      saveUserData();
       showResult();
       console.log("Tasks reset");
     }
@@ -539,7 +407,6 @@
         percent = Math.round((total / maxScore) * 100);
         severity = percent < 40 ? 'mild' : percent <= 70 ? 'moderate' : 'severe';
         quizState = { percent, severity, tasks: tasksBySeverity[severity] };
-        saveUserData();
       }
       const scoreEl = document.getElementById('score');
       scoreEl.textContent = `Focus Score: ${percent}%`;
@@ -780,7 +647,6 @@
       if (value && (!notepadStates[taskId] || !notepadStates[taskId].includes(value))) {
         notepadStates[taskId] = notepadStates[taskId] || [];
         notepadStates[taskId].push(value);
-        saveUserData();
         const div = document.createElement('div');
         div.className = 'flex items-center space-x-[1vw] mt-[0.5vh]';
         div.innerHTML = `<span class="text-[0.9rem]">${value}</span>`;
@@ -803,7 +669,6 @@
       document.getElementById(`notepad${index}`).value = '';
       document.getElementById(`notepadList${index}`).innerHTML = '';
       notepadStates[taskId] = [];
-      saveUserData();
       currentActiveTask = null;
       enableTaskButtons();
       console.log("Notepad cleared, task:", taskId);
