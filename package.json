@@ -1,0 +1,15 @@
+{
+  "name": "thinksharp",
+  "version": "1.0.0",
+  "description": "Welcome to **ThinkSharp** — a simple yet powerful app made *just for people with ADHD* who want to sharpen their focus, boost their productivity, and take control of their daily routine 🔥📅",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tailwindcss": "^3.4.3"
+  }
+}
