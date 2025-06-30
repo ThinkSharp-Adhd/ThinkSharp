@@ -6,10 +6,18 @@
   <title>ThinkSharp: ADHD Focus Quiz</title>
   <link rel="icon" href="favicon.ico" type="image/x-icon">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-gray-100 min-h-[100vh] flex items-center justify-center transition-colors duration-300" id="body">
   <div id="app" class="w-[90vw] max-w-[600px] min-w-[300px] mx-auto p-[4vw] sm:p-[2vw] bg-white rounded-xl shadow-lg relative transition-colors duration-300">
+    <div id="auth-section" class="">
+      <h2 class="text-[1.5rem] font-semibold mb-[2vh] text-center text-gray-800 dark:text-gray-200">Sign In to Take the Quiz</h2>
+      <input id="email" type="email" class="w-full p-[0.5rem] mb-[1vh] border rounded text-[1rem] dark:bg-gray-700 dark:text-gray-200" placeholder="Enter your email" aria-label="Email input">
+      <button id="send-link" class="w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-[1rem] sm:text-[1.1rem]" aria-label="Send sign-in link">Send Sign-In Link</button>
+      <div id="auth-message" class="mt-[1vh] text-center text-[0.9rem] text-gray-600 dark:text-gray-400"></div>
+    </div>
     <div id="loader" class="flex justify-center items-center h-[40vh] sm:h-[30vh] hidden">
       <div class="flex space-x-[1vw]">
         <div class="w-[2vw] h-[2vw] min-w-[8px] min-h-[8px] bg-blue-500 rounded-full loader-dot" style="--i: 0;"></div>
@@ -17,7 +25,7 @@
         <div class="w-[2vw] h-[2vw] min-w-[8px] min-h-[8px] bg-blue-500 rounded-full loader-dot" style="--i: 2;"></div>
       </div>
     </div>
-    <div id="quiz" class="quiz-container">
+    <div id="quiz" class="quiz-container hidden">
       <div class="question text-[1.2rem] sm:text-[1.5rem] font-semibold text-gray-800 mb-[2vh] text-center dark:text-gray-200" id="question">
         <p>Loading...</p>
       </div>
@@ -39,6 +47,7 @@
       <div class="task-list space-y-[1vh]" id="tasks"></div>
       <div class="flex space-x-[1vw] mt-[2vh]">
         <button class="retake-btn w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-[1rem] sm:text-[1.1rem]" id="settings-btn" aria-label="Open settings">Settings</button>
+        <button class="w-full py-[1vh] bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-[1rem] sm:text-[1.1rem]" id="sign-out-btn" aria-label="Sign out">Sign Out</button>
       </div>
     </div>
     <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal">
@@ -53,6 +62,99 @@
       </div>
     </div>
   </div>
+
   <script src="script.js"></script>
+  <script>
+    // Initialize Firebase
+    const firebaseConfig = {
+      apiKey: "your-api-key",
+      authDomain: "your-project-id.firebaseapp.com",
+      projectId: "your-project-id",
+      storageBucket: "your-project-id.appspot.com",
+      messagingSenderId: "your-messaging-sender-id",
+      appId: "your-app-id"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    const auth = firebase.auth();
+    const sendLinkBtn = document.getElementById('send-link');
+    const signOutBtn = document.getElementById('sign-out-btn');
+    const emailInput = document.getElementById('email');
+    const authMessage = document.getElementById('auth-message');
+    const authSection = document.getElementById('auth-section');
+    const quizSection = document.getElementById('quiz');
+    const resultSection = document.getElementById('result-screen');
+
+    // Handle sending sign-in link
+    sendLinkBtn.addEventListener('click', () => {
+      const email = emailInput.value.trim();
+      if (!email) {
+        authMessage.textContent = 'Please enter an email';
+        return;
+      }
+
+      const actionCodeSettings = {
+        url: window.location.href, // Redirect back to this page
+        handleCodeInApp: true
+      };
+
+      auth.sendSignInLinkToEmail(email, actionCodeSettings)
+        .then(() => {
+          authMessage.textContent = 'Sign-in link sent to your email';
+          window.localStorage.setItem('emailForSignIn', email);
+        })
+        .catch(error => {
+          authMessage.textContent = `Error: ${error.message}`;
+          console.error(error);
+        });
+    });
+
+    // Handle sign-in link
+    if (auth.isSignInWithEmailLink(window.location.href)) {
+      const email = window.localStorage.getItem('emailForSignIn');
+      if (email) {
+        auth.signInWithEmailLink(email, window.location.href)
+          .then(result => {
+            window.localStorage.removeItem('emailForSignIn');
+            authMessage.textContent = 'Signed in successfully!';
+            authSection.classList.add('hidden');
+            quizSection.classList.remove('hidden');
+            startQuiz(); // Start the quiz from script.js
+          })
+          .catch(error => {
+            authMessage.textContent = `Error: ${error.message}`;
+            console.error(error);
+          });
+      }
+    }
+
+    // Handle authentication state
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        authSection.classList.add('hidden');
+        quizSection.classList.remove('hidden');
+        startQuiz(); // Ensure quiz starts if user is signed in
+      } else {
+        authSection.classList.remove('hidden');
+        quizSection.classList.add('hidden');
+        resultSection.classList.add('hidden');
+      }
+    });
+
+    // Handle sign-out
+    signOutBtn.addEventListener('click', () => {
+      auth.signOut()
+        .then(() => {
+          authMessage.textContent = 'Signed out successfully';
+          authSection.classList.remove('hidden');
+          quizSection.classList.add('hidden');
+          resultSection.classList.add('hidden');
+        })
+        .catch(error => {
+          authMessage.textContent = `Error: ${error.message}`;
+          console.error(error);
+        });
+    });
+  </script>
 </body>
 </html>
