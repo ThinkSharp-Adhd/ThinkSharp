@@ -63,7 +63,6 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
   <script>
     // Initialize Firebase
     const firebaseConfig = {
@@ -94,7 +93,7 @@
       }
 
       const actionCodeSettings = {
-        url: window.location.href, // Redirect back to this page
+        url: 'https://your-username.github.io/your-repo-name', // Replace with your GitHub Pages URL
         handleCodeInApp: true
       };
 
@@ -119,7 +118,7 @@
             authMessage.textContent = 'Signed in successfully!';
             authSection.classList.add('hidden');
             quizSection.classList.remove('hidden');
-            startQuiz(); // Start the quiz from script.js
+            startQuiz(); // Call startQuiz from script.js
           })
           .catch(error => {
             authMessage.textContent = `Error: ${error.message}`;
@@ -156,5 +155,6 @@
         });
     });
   </script>
+  <script src="script.js"></script>
 </body>
 </html>
