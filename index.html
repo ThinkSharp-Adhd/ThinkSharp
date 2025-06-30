@@ -6,72 +6,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="ThinkSharp - A Focus Quiz for ADHD Awareness and Self-Help">
   <title>ThinkSharp: ADHD Focus Quiz</title>
-<<<<<<< HEAD
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="styles.css" />
-  <!-- Firebase SDK -->
-=======
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
-  <link rel="stylesheet" href="styles.css">
->>>>>>> 98af498 (Final working ThinkSharp setup)
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 </head>
 <body class="bg-gray-100 min-h-[100vh] flex items-center justify-center transition-colors duration-300" id="body">
   <div id="app" class="w-[90vw] max-w-[600px] min-w-[300px] mx-auto p-[4vw] sm:p-[2vw] bg-white rounded-xl shadow-lg relative transition-colors duration-300">
-<<<<<<< HEAD
-    
+
     <!-- Authentication -->
     <div id="auth-section">
       <h2 class="text-[1.5rem] font-semibold mb-[2vh] text-center text-gray-800 dark:text-gray-200">Sign In to Take the Quiz</h2>
       <input id="email" type="email" class="w-full p-[0.5rem] mb-[1vh] border rounded text-[1rem] dark:bg-gray-700 dark:text-gray-200" placeholder="Enter your email" />
       <button id="send-link" class="w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-[1rem]">Send Sign-In Link</button>
-=======
-    <!-- Auth Section -->
-    <div id="auth-section">
-      <h2 class="text-[1.5rem] font-semibold mb-[2vh] text-center text-gray-800 dark:text-gray-200">Sign In to Take the Quiz</h2>
-      <input id="email" type="email" class="w-full p-[0.5rem] mb-[1vh] border rounded text-[1rem] dark:bg-gray-700 dark:text-gray-200" placeholder="Enter your email">
-      <button id="send-link" class="w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-[1rem]">Send Sign-In Link</button>
->>>>>>> 98af498 (Final working ThinkSharp setup)
       <div id="auth-message" class="mt-[1vh] text-center text-[0.9rem] text-gray-600 dark:text-gray-400"></div>
     </div>
 
     <!-- Loader -->
     <div id="loader" class="flex justify-center items-center h-[40vh] sm:h-[30vh] hidden">
       <div class="flex space-x-[1vw]">
-<<<<<<< HEAD
-        <div class="w-[2vw] h-[2vw] bg-blue-500 rounded-full loader-dot"></div>
-        <div class="w-[2vw] h-[2vw] bg-blue-500 rounded-full loader-dot"></div>
-        <div class="w-[2vw] h-[2vw] bg-blue-500 rounded-full loader-dot"></div>
-=======
         <div class="w-[2vw] h-[2vw] bg-blue-500 rounded-full loader-dot" style="--i: 0;"></div>
         <div class="w-[2vw] h-[2vw] bg-blue-500 rounded-full loader-dot" style="--i: 1;"></div>
         <div class="w-[2vw] h-[2vw] bg-blue-500 rounded-full loader-dot" style="--i: 2;"></div>
->>>>>>> 98af498 (Final working ThinkSharp setup)
       </div>
     </div>
 
     <!-- Quiz -->
-<<<<<<< HEAD
-    <div id="quiz" class="quiz-container hidden">
-      <div id="question" class="question text-[1.2rem] sm:text-[1.5rem] font-semibold text-gray-800 mb-[2vh] text-center dark:text-gray-200">
-        <p>Loading...</p>
-      </div>
-      <div id="options" class="options flex flex-wrap justify-between gap-[1vw] mb-[2vh]"></div>
-      <div class="labels flex justify-between text-[0.8rem] text-gray-600 dark:text-gray-400">
-=======
     <div id="quiz" class="hidden">
-      <div class="question text-[1.2rem] font-semibold text-center mb-[2vh] text-gray-800 dark:text-gray-200" id="question">Loading...</div>
-      <div class="options flex flex-wrap justify-between gap-[1vw] mb-[2vh]" id="options"></div>
-      <div class="labels flex justify-between text-sm text-gray-600 dark:text-gray-400">
->>>>>>> 98af498 (Final working ThinkSharp setup)
+      <div id="question" class="question text-[1.2rem] sm:text-[1.5rem] font-semibold text-gray-800 mb-[2vh] text-center dark:text-gray-200">Loading...</div>
+      <div id="options" class="options flex flex-wrap justify-between gap-[1vw] mb-[2vh]"></div>
+      <div class="labels flex justify-between text-[0.8rem] sm:text-[0.9rem] text-gray-600 dark:text-gray-400">
         <span>Never</span><span>Rarely</span><span>Sometimes</span><span>Often</span><span>Always</span>
       </div>
     </div>
 
     <!-- Results -->
     <div id="result-screen" class="hidden">
-<<<<<<< HEAD
       <div id="xpLevel" class="text-[1.2rem] font-semibold text-center mb-[1vh] text-gray-800 dark:text-gray-200"></div>
       <div class="progress-bar-container w-full bg-gray-200 rounded-full mb-[2vh] dark:bg-gray-700">
         <div id="xpProgress" class="progress-bar rounded-full"></div>
@@ -81,23 +51,11 @@
       <div class="flex space-x-[1vw] mt-[2vh]">
         <button id="settings-btn" class="w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600">Settings</button>
         <button id="sign-out-btn" class="w-full py-[1vh] bg-red-500 text-white rounded-lg hover:bg-red-600">Sign Out</button>
-=======
-      <div class="xp-level text-center text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200" id="xpLevel"></div>
-      <div class="progress-bar-container w-full bg-gray-200 rounded-full mb-4 dark:bg-gray-700">
-        <div class="progress-bar rounded-full" id="xpProgress"></div>
-      </div>
-      <div class="quiz-result text-2xl font-bold text-center mb-4 text-gray-800 dark:text-gray-200" id="score"></div>
-      <div class="task-list space-y-2" id="tasks"></div>
-      <div class="flex space-x-2 mt-4">
-        <button id="settings-btn" class="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Settings</button>
-        <button id="sign-out-btn" class="w-full py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">Sign Out</button>
->>>>>>> 98af498 (Final working ThinkSharp setup)
       </div>
     </div>
 
     <!-- Settings Modal -->
     <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal">
-<<<<<<< HEAD
       <div class="bg-white p-[4vw] rounded-xl w-[80vw] max-w-[400px] dark:bg-gray-800">
         <h2 class="text-[1.2rem] font-semibold mb-[2vh] text-gray-800 dark:text-gray-200">Settings</h2>
         <div class="flex items-center justify-between mb-[2vh]">
@@ -106,33 +64,12 @@
         </div>
         <button id="retake-btn" class="w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600">Retake Quiz</button>
         <button id="close-settings-btn" class="w-full py-[1vh] mt-[1vh] bg-gray-500 text-white rounded-lg hover:bg-gray-600">Close</button>
-=======
-      <div class="bg-white p-6 rounded-xl w-[80vw] max-w-[400px] dark:bg-gray-800">
-        <h2 class="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Settings</h2>
-        <div class="flex items-center justify-between mb-4">
-          <label class="text-gray-700 dark:text-gray-300">Dark Mode</label>
-          <input type="checkbox" id="darkModeToggle" class="w-5 h-5">
-        </div>
-        <button id="retake-btn" class="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Retake Quiz</button>
-        <button id="close-settings-btn" class="w-full py-2 mt-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">Close</button>
->>>>>>> 98af498 (Final working ThinkSharp setup)
       </div>
     </div>
+
   </div>
 
-  <!-- Firebase + Main Script -->
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBlgQqPVQjAr_edKWGiVmS5hIGGCXRU9Vc",
-      authDomain: "website-login-8697b.firebaseapp.com",
-      projectId: "website-login-8697b",
-      storageBucket: "website-login-8697b.appspot.com",
-      messagingSenderId: "154630434494",
-      appId: "1:154630434494:web:6e51f148e5a5a6ff9938ef",
-      measurementId: "G-919YBWXJZH"
-    };
-    firebase.initializeApp(firebaseConfig);
-  </script>
+  <!-- Scripts -->
   <script src="script.js"></script>
 </body>
 </html>

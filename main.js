@@ -8,6 +8,7 @@ const firebaseConfig = {
   appId: "1:154630434494:web:6e51f148e5a5a6ff9938ef",
   measurementId: "G-919YBWXJZH"
 };
+
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
@@ -20,21 +21,19 @@ const authSection = document.getElementById('auth-section');
 const quizSection = document.getElementById('quiz');
 const resultSection = document.getElementById('result-screen');
 
-// Optional: Placeholder quiz data
+// Quiz data
 const questions = [
   { question: "Do you find it hard to focus for long periods?", options: ["Never", "Rarely", "Sometimes", "Often", "Always"] },
   { question: "How often do you lose track of tasks?", options: ["Never", "Rarely", "Sometimes", "Often", "Always"] }
 ];
+
 let currentQuestionIndex = 0;
 
-// Start quiz
 function startQuiz() {
-  console.log("Starting quiz");
   currentQuestionIndex = 0;
   showQuestion();
 }
 
-// Display a question
 function showQuestion() {
   const questionObj = questions[currentQuestionIndex];
   const questionEl = document.getElementById('question');
@@ -59,7 +58,6 @@ function showQuestion() {
   });
 }
 
-// Dummy result function
 function showResults() {
   quizSection.classList.add("hidden");
   resultSection.classList.remove("hidden");
@@ -101,6 +99,9 @@ if (auth.isSignInWithEmailLink(window.location.href)) {
     .then(() => {
       window.localStorage.removeItem('emailForSignIn');
       authMessage.textContent = 'Signed in!';
+      authSection.classList.add('hidden');
+      quizSection.classList.remove('hidden');
+      startQuiz();
     })
     .catch(error => {
       authMessage.textContent = `Sign-in error: ${error.message}`;
@@ -127,6 +128,9 @@ signOutBtn?.addEventListener('click', () => {
   auth.signOut()
     .then(() => {
       authMessage.textContent = 'Signed out';
+      authSection.classList.remove('hidden');
+      quizSection.classList.add('hidden');
+      resultSection.classList.add('hidden');
     })
     .catch(error => {
       authMessage.textContent = `Error: ${error.message}`;
