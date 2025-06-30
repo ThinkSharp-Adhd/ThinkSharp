@@ -1,124 +1,94 @@
-/* TAILWIND BASE (keep this at the top) */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* CUSTOM UTILITIES */
-@layer utilities {
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(2vh); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateX(-2vw); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  @keyframes partyPopper {
-    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-    50% { transform: translateY(-2vh) rotate(15deg); opacity: 0.8; }
-    100% { transform: translateY(-4vh) rotate(30deg); opacity: 0; }
-  }
-
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 0.5; }
-    50% { transform: scale(1.5); opacity: 1; }
-  }
-
-  @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-  }
-
-  .fade-in { animation: fadeIn 0.5s ease-out; }
-  .slide-in { animation: slideIn 0.5s ease-out; }
-
-  .circle {
-    transition: background-color 0.2s ease;
-    touch-action: manipulation;
-    min-width: 44px;
-    min-height: 44px;
-    width: 12vw;
-    height: 12vw;
-    max-width: 60px;
-    max-height: 60px;
-  }
-  .circle:active {
-    transform: scale(1.1);
-    opacity: 0.9;
-    cursor: pointer;
-  }
-
-  .task-item {
-    transition: background-color 0.3s ease;
-    touch-action: manipulation;
-  }
-  .task-item:active {
-    transform: translateX(0.5vw);
-    background-color: #e5e7eb;
-  }
-  .dark .task-item:active {
-    background-color: #6b7280;
-  }
-
-  .loader-dot {
-    animation: pulse 1.5s ease-in-out infinite;
-    animation-delay: calc(0.2s * var(--i));
-    width: 10px;
-    height: 10px;
-    background-color: #3b82f6;
-    border-radius: 50%;
-    display: inline-block;
-    margin: 0 4px;
-  }
-
-  .loader-hidden {
-    display: none !important;
-    animation: none !important;
-  }
-
-  .disabled {
-    opacity: 0.5;
-    pointer-events: none;
-  }
-
-  .party-popper {
-    position: absolute;
-    font-size: 1.5rem;
-    animation: partyPopper 1s ease-out forwards;
-  }
-
-  .progress-bar {
-    height: 1rem;
-    background-color: #3b82f6;
-    transition: width 0.3s ease-in-out;
-  }
-  .dark .progress-bar {
-    background-color: #34d399;
-  }
-
-  .modal {
-    backdrop-filter: blur(5px);
-    z-index: 1000;
-  }
-
-  button, input[type="checkbox"], input[type="text"], textarea {
-    min-width: 44px;
-    min-height: 44px;
-    touch-action: manipulation;
-  }
-
-  button {
-    padding: 0.5rem 1rem;
-  }
-
-  input[type="checkbox"] {
-    width: 1.5rem;
-    height: 1.5rem;
-  }
-
-  textarea, input[type="text"] {
-    padding: 0.5rem;
-  }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(2vh); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-2vw); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes partyPopper {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  50% { transform: translateY(-2vh) rotate(15deg); opacity: 0.8; }
+  100% { transform: translateY(-4vh) rotate(30deg); opacity: 0; }
+}
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.fade-in { animation: fadeIn 0.5s ease-out; }
+.slide-in { animation: slideIn 0.5s ease-out; }
+.party-popper {
+  position: absolute;
+  font-size: 1.5rem;
+  animation: partyPopper 1s ease-out forwards;
+}
+.circle {
+  transition: background-color 0.2s ease;
+  touch-action: manipulation;
+  min-width: 44px;
+  min-height: 44px;
+  width: 12vw;
+  height: 12vw;
+  max-width: 60px;
+  max-height: 60px;
+}
+.circle:active {
+  transform: scale(1.1);
+  opacity: 0.9;
+  cursor: pointer;
+}
+.task-item {
+  transition: background-color 0.3s ease;
+  touch-action: manipulation;
+}
+.task-item:active {
+  transform: translateX(0.5vw);
+  background-color: #e5e7eb;
+}
+.dark .task-item:active {
+  background-color: #6b7280;
+}
+.loader-dot {
+  animation: bounce 1s infinite;
+}
+.loader-dot:nth-child(2) { animation-delay: 0.2s; }
+.loader-dot:nth-child(3) { animation-delay: 0.4s; }
+.loader-hidden {
+  display: none !important;
+  animation: none !important;
+}
+.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.progress-bar {
+  height: 1vh;
+  background-color: #4caf50;
+  transition: width 0.3s ease;
+}
+.dark .progress-bar {
+  background-color: #34d399;
+}
+.modal {
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+}
+button, input[type="checkbox"], input[type="text"], textarea {
+  min-width: 44px;
+  min-height: 44px;
+  touch-action: manipulation;
+}
+button {
+  padding: 0.5rem 1rem;
+}
+input[type="checkbox"] {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+textarea, input[type="text"] {
+  padding: 0.5rem;
 }

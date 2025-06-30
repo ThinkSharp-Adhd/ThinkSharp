@@ -2,14 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="ThinkSharp - A Focus Quiz for ADHD Awareness and Self-Help">
   <title>ThinkSharp: ADHD Focus Quiz</title>
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="styles.css" />
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBlgQqPVQjAr_edKWGiVmS5hIGGCXRU9Vc",
+      authDomain: "website-login-8697b.firebaseapp.com",
+      projectId: "website-login-8697b",
+      storageBucket: "website-login-8697b.appspot.com",
+      messagingSenderId: "154630434494",
+      appId: "1:154630434494:web:6e51f148e5a5a6ff9938ef",
+      measurementId: "G-919YBWXJZH"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
 </head>
 <body class="bg-gray-100 min-h-[100vh] flex items-center justify-center transition-colors duration-300" id="body">
   <div id="app" class="w-[90vw] max-w-[600px] min-w-[300px] mx-auto p-[4vw] sm:p-[2vw] bg-white rounded-xl shadow-lg relative transition-colors duration-300">
@@ -32,10 +46,12 @@
     </div>
 
     <!-- Quiz -->
-    <div id="quiz" class="hidden">
-      <div id="question" class="question text-[1.2rem] sm:text-[1.5rem] font-semibold text-gray-800 mb-[2vh] text-center dark:text-gray-200">Loading...</div>
+    <div id="quiz" class="quiz-container hidden">
+      <div id="question" class="question text-[1.2rem] sm:text-[1.5rem] font-semibold text-gray-800 mb-[2vh] text-center dark:text-gray-200">
+        <p>Loading...</p>
+      </div>
       <div id="options" class="options flex flex-wrap justify-between gap-[1vw] mb-[2vh]"></div>
-      <div class="labels flex justify-between text-[0.8rem] sm:text-[0.9rem] text-gray-600 dark:text-gray-400">
+      <div class="labels flex justify-between text-[0.8rem] text-gray-600 dark:text-gray-400">
         <span>Never</span><span>Rarely</span><span>Sometimes</span><span>Often</span><span>Always</span>
       </div>
     </div>
@@ -66,10 +82,9 @@
         <button id="close-settings-btn" class="w-full py-[1vh] mt-[1vh] bg-gray-500 text-white rounded-lg hover:bg-gray-600">Close</button>
       </div>
     </div>
-
   </div>
 
-  <!-- Scripts -->
+  <!-- Main Script -->
   <script src="script.js"></script>
 </body>
 </html>
