@@ -6,9 +6,108 @@
   <title>ThinkSharp: ADHD Focus Quiz</title>
   <link rel="icon" href="favicon.ico" type="image/x-icon">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
-  <link rel="stylesheet" href="styles.css">
+  <script type="module">
+    // Import Firebase SDKs
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    // Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBlgQqPVQjAr_edKWGiVmS5hIGGCXRU9Vc",
+      authDomain: "website-login-8697b.firebaseapp.com",
+      projectId: "website-login-8697b",
+      storageBucket: "website-login-8697b.firebasestorage.app",
+      messagingSenderId: "154630434494",
+      appId: "1:154630434494:web:6e51f148e5a5a6ff9938ef",
+      measurementId: "G-919YBWXJZH"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // DOM elements
+    const sendLinkBtn = document.getElementById('send-link');
+    const signOutBtn = document.getElementById('sign-out-btn');
+    const emailInput = document.getElementById('email');
+    const authMessage = document.getElementById('auth-message');
+    const authSection = document.getElementById('auth-section');
+    const quizSection = document.getElementById('quiz');
+    const resultSection = document.getElementById('result-screen');
+
+    // Handle sending sign-in link
+    sendLinkBtn.addEventListener('click', () => {
+      const email = emailInput.value.trim();
+      if (!email) {
+        authMessage.textContent = 'Please enter an email';
+        return;
+      }
+
+      const actionCodeSettings = {
+        url: 'https://thinksharp-adhd.github.io/ThinkSharp/',
+        handleCodeInApp: true
+      };
+
+      sendSignInLinkToEmail(auth, email, actionCodeSettings)
+        .then(() => {
+          authMessage.textContent = 'Sign-in link sent to your email. Please check your inbox or spam folder.';
+          window.localStorage.setItem('emailForSignIn', email);
+        })
+        .catch(error => {
+          authMessage.textContent = `Error: ${error.message}`;
+          console.error(error);
+        });
+    });
+
+    // Handle sign-in link
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+      const email = window.localStorage.getItem('emailForSignIn');
+      if (email) {
+        signInWithEmailLink(auth, email, window.location.href)
+          .then(result => {
+            window.localStorage.removeItem('emailForSignIn');
+            authMessage.textContent = 'Signed in successfully!';
+            authSection.classList.add('hidden');
+            quizSection.classList.remove('hidden');
+            startQuiz(); // Call startQuiz from script.js
+          })
+          .catch(error => {
+            authMessage.textContent = `Error: ${error.message}`;
+            console.error(error);
+          });
+      } else {
+        authMessage.textContent = 'Please enter your email again to sign in.';
+      }
+    }
+
+    // Handle authentication state
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        authSection.classList.add('hidden');
+        quizSection.classList.remove('hidden');
+        startQuiz(); // Ensure quiz starts if user is signed in
+      } else {
+        authSection.classList.remove('hidden');
+        quizSection.classList.add('hidden');
+        resultSection.classList.add('hidden');
+      }
+    });
+
+    // Handle sign-out
+    signOutBtn.addEventListener('click', () => {
+      signOut(auth)
+        .then(() => {
+          authMessage.textContent = 'Signed out successfully';
+          authSection.classList.remove('hidden');
+          quizSection.classList.add('hidden');
+          resultSection.classList.add('hidden');
+        })
+        .catch(error => {
+          authMessage.textContent = `Error: ${error.message}`;
+          console.error(error);
+        });
+    });
+  </script>
 </head>
 <body class="bg-gray-100 min-h-[100vh] flex items-center justify-center transition-colors duration-300" id="body">
   <div id="app" class="w-[90vw] max-w-[600px] min-w-[300px] mx-auto p-[4vw] sm:p-[2vw] bg-white rounded-xl shadow-lg relative transition-colors duration-300">
@@ -62,99 +161,6 @@
       </div>
     </div>
   </div>
-
-  <script>
-    // Initialize Firebase
-    const firebaseConfig = {
-      apiKey: "your-api-key",
-      authDomain: "your-project-id.firebaseapp.com",
-      projectId: "your-project-id",
-      storageBucket: "your-project-id.appspot.com",
-      messagingSenderId: "your-messaging-sender-id",
-      appId: "your-app-id"
-    };
-    firebase.initializeApp(firebaseConfig);
-
-    const auth = firebase.auth();
-    const sendLinkBtn = document.getElementById('send-link');
-    const signOutBtn = document.getElementById('sign-out-btn');
-    const emailInput = document.getElementById('email');
-    const authMessage = document.getElementById('auth-message');
-    const authSection = document.getElementById('auth-section');
-    const quizSection = document.getElementById('quiz');
-    const resultSection = document.getElementById('result-screen');
-
-    // Handle sending sign-in link
-    sendLinkBtn.addEventListener('click', () => {
-      const email = emailInput.value.trim();
-      if (!email) {
-        authMessage.textContent = 'Please enter an email';
-        return;
-      }
-
-      const actionCodeSettings = {
-        url: 'https://your-username.github.io/your-repo-name', // Replace with your GitHub Pages URL
-        handleCodeInApp: true
-      };
-
-      auth.sendSignInLinkToEmail(email, actionCodeSettings)
-        .then(() => {
-          authMessage.textContent = 'Sign-in link sent to your email';
-          window.localStorage.setItem('emailForSignIn', email);
-        })
-        .catch(error => {
-          authMessage.textContent = `Error: ${error.message}`;
-          console.error(error);
-        });
-    });
-
-    // Handle sign-in link
-    if (auth.isSignInWithEmailLink(window.location.href)) {
-      const email = window.localStorage.getItem('emailForSignIn');
-      if (email) {
-        auth.signInWithEmailLink(email, window.location.href)
-          .then(result => {
-            window.localStorage.removeItem('emailForSignIn');
-            authMessage.textContent = 'Signed in successfully!';
-            authSection.classList.add('hidden');
-            quizSection.classList.remove('hidden');
-            startQuiz(); // Call startQuiz from script.js
-          })
-          .catch(error => {
-            authMessage.textContent = `Error: ${error.message}`;
-            console.error(error);
-          });
-      }
-    }
-
-    // Handle authentication state
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        authSection.classList.add('hidden');
-        quizSection.classList.remove('hidden');
-        startQuiz(); // Ensure quiz starts if user is signed in
-      } else {
-        authSection.classList.remove('hidden');
-        quizSection.classList.add('hidden');
-        resultSection.classList.add('hidden');
-      }
-    });
-
-    // Handle sign-out
-    signOutBtn.addEventListener('click', () => {
-      auth.signOut()
-        .then(() => {
-          authMessage.textContent = 'Signed out successfully';
-          authSection.classList.remove('hidden');
-          quizSection.classList.add('hidden');
-          resultSection.classList.add('hidden');
-        })
-        .catch(error => {
-          authMessage.textContent = `Error: ${error.message}`;
-          console.error(error);
-        });
-    });
-  </script>
   <script src="script.js"></script>
 </body>
 </html>
