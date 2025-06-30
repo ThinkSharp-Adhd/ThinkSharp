@@ -2,165 +2,88 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ThinkSharp - A Focus Quiz for ADHD Awareness and Self-Help">
   <title>ThinkSharp: ADHD Focus Quiz</title>
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script type="module">
-    // Import Firebase SDKs
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-    // Your Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyBlgQqPVQjAr_edKWGiVmS5hIGGCXRU9Vc",
-      authDomain: "website-login-8697b.firebaseapp.com",
-      projectId: "website-login-8697b",
-      storageBucket: "website-login-8697b.firebasestorage.app",
-      messagingSenderId: "154630434494",
-      appId: "1:154630434494:web:6e51f148e5a5a6ff9938ef",
-      measurementId: "G-919YBWXJZH"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    // DOM elements
-    const sendLinkBtn = document.getElementById('send-link');
-    const signOutBtn = document.getElementById('sign-out-btn');
-    const emailInput = document.getElementById('email');
-    const authMessage = document.getElementById('auth-message');
-    const authSection = document.getElementById('auth-section');
-    const quizSection = document.getElementById('quiz');
-    const resultSection = document.getElementById('result-screen');
-
-    // Handle sending sign-in link
-    sendLinkBtn.addEventListener('click', () => {
-      const email = emailInput.value.trim();
-      if (!email) {
-        authMessage.textContent = 'Please enter an email';
-        return;
-      }
-
-      const actionCodeSettings = {
-        url: 'https://thinksharp-adhd.github.io/ThinkSharp/',
-        handleCodeInApp: true
-      };
-
-      sendSignInLinkToEmail(auth, email, actionCodeSettings)
-        .then(() => {
-          authMessage.textContent = 'Sign-in link sent to your email. Please check your inbox or spam folder.';
-          window.localStorage.setItem('emailForSignIn', email);
-        })
-        .catch(error => {
-          authMessage.textContent = `Error: ${error.message}`;
-          console.error(error);
-        });
-    });
-
-    // Handle sign-in link
-    if (isSignInWithEmailLink(auth, window.location.href)) {
-      const email = window.localStorage.getItem('emailForSignIn');
-      if (email) {
-        signInWithEmailLink(auth, email, window.location.href)
-          .then(result => {
-            window.localStorage.removeItem('emailForSignIn');
-            authMessage.textContent = 'Signed in successfully!';
-            authSection.classList.add('hidden');
-            quizSection.classList.remove('hidden');
-            startQuiz(); // Call startQuiz from script.js
-          })
-          .catch(error => {
-            authMessage.textContent = `Error: ${error.message}`;
-            console.error(error);
-          });
-      } else {
-        authMessage.textContent = 'Please enter your email again to sign in.';
-      }
-    }
-
-    // Handle authentication state
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        authSection.classList.add('hidden');
-        quizSection.classList.remove('hidden');
-        startQuiz(); // Ensure quiz starts if user is signed in
-      } else {
-        authSection.classList.remove('hidden');
-        quizSection.classList.add('hidden');
-        resultSection.classList.add('hidden');
-      }
-    });
-
-    // Handle sign-out
-    signOutBtn.addEventListener('click', () => {
-      signOut(auth)
-        .then(() => {
-          authMessage.textContent = 'Signed out successfully';
-          authSection.classList.remove('hidden');
-          quizSection.classList.add('hidden');
-          resultSection.classList.add('hidden');
-        })
-        .catch(error => {
-          authMessage.textContent = `Error: ${error.message}`;
-          console.error(error);
-        });
-    });
-  </script>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 </head>
 <body class="bg-gray-100 min-h-[100vh] flex items-center justify-center transition-colors duration-300" id="body">
   <div id="app" class="w-[90vw] max-w-[600px] min-w-[300px] mx-auto p-[4vw] sm:p-[2vw] bg-white rounded-xl shadow-lg relative transition-colors duration-300">
-    <div id="auth-section" class="">
+    
+    <!-- Authentication -->
+    <div id="auth-section">
       <h2 class="text-[1.5rem] font-semibold mb-[2vh] text-center text-gray-800 dark:text-gray-200">Sign In to Take the Quiz</h2>
-      <input id="email" type="email" class="w-full p-[0.5rem] mb-[1vh] border rounded text-[1rem] dark:bg-gray-700 dark:text-gray-200" placeholder="Enter your email" aria-label="Email input">
-      <button id="send-link" class="w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-[1rem] sm:text-[1.1rem]" aria-label="Send sign-in link">Send Sign-In Link</button>
+      <input id="email" type="email" class="w-full p-[0.5rem] mb-[1vh] border rounded text-[1rem] dark:bg-gray-700 dark:text-gray-200" placeholder="Enter your email" />
+      <button id="send-link" class="w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-[1rem]">Send Sign-In Link</button>
       <div id="auth-message" class="mt-[1vh] text-center text-[0.9rem] text-gray-600 dark:text-gray-400"></div>
     </div>
+
+    <!-- Loader -->
     <div id="loader" class="flex justify-center items-center h-[40vh] sm:h-[30vh] hidden">
       <div class="flex space-x-[1vw]">
-        <div class="w-[2vw] h-[2vw] min-w-[8px] min-h-[8px] bg-blue-500 rounded-full loader-dot" style="--i: 0;"></div>
-        <div class="w-[2vw] h-[2vw] min-w-[8px] min-h-[8px] bg-blue-500 rounded-full loader-dot" style="--i: 1;"></div>
-        <div class="w-[2vw] h-[2vw] min-w-[8px] min-h-[8px] bg-blue-500 rounded-full loader-dot" style="--i: 2;"></div>
+        <div class="w-[2vw] h-[2vw] bg-blue-500 rounded-full loader-dot"></div>
+        <div class="w-[2vw] h-[2vw] bg-blue-500 rounded-full loader-dot"></div>
+        <div class="w-[2vw] h-[2vw] bg-blue-500 rounded-full loader-dot"></div>
       </div>
     </div>
+
+    <!-- Quiz -->
     <div id="quiz" class="quiz-container hidden">
-      <div class="question text-[1.2rem] sm:text-[1.5rem] font-semibold text-gray-800 mb-[2vh] text-center dark:text-gray-200" id="question">
+      <div id="question" class="question text-[1.2rem] sm:text-[1.5rem] font-semibold text-gray-800 mb-[2vh] text-center dark:text-gray-200">
         <p>Loading...</p>
       </div>
-      <div class="options flex flex-wrap justify-between gap-[1vw] mb-[2vh]" id="options"></div>
-      <div class="labels flex justify-between text-[0.8rem] sm:text-[0.9rem] text-gray-600 dark:text-gray-400">
-        <span>Never</span>
-        <span>Rarely</span>
-        <span>Sometimes</span>
-        <span>Often</span>
-        <span>Always</span>
+      <div id="options" class="options flex flex-wrap justify-between gap-[1vw] mb-[2vh]"></div>
+      <div class="labels flex justify-between text-[0.8rem] text-gray-600 dark:text-gray-400">
+        <span>Never</span><span>Rarely</span><span>Sometimes</span><span>Often</span><span>Always</span>
       </div>
     </div>
+
+    <!-- Results -->
     <div id="result-screen" class="hidden">
-      <div class="xp-level text-[1rem] sm:text-[1.2rem] font-semibold text-center mb-[1vh] text-gray-800 dark:text-gray-200" id="xpLevel"></div>
+      <div id="xpLevel" class="text-[1.2rem] font-semibold text-center mb-[1vh] text-gray-800 dark:text-gray-200"></div>
       <div class="progress-bar-container w-full bg-gray-200 rounded-full mb-[2vh] dark:bg-gray-700">
-        <div class="progress-bar rounded-full" id="xpProgress"></div>
+        <div id="xpProgress" class="progress-bar rounded-full"></div>
       </div>
-      <div class="quiz-result text-[1.5rem] sm:text-[2rem] font-bold text-center mb-[2vh] text-gray-800 dark:text-gray-200" id="score"></div>
-      <div class="task-list space-y-[1vh]" id="tasks"></div>
+      <div id="score" class="text-[2rem] font-bold text-center mb-[2vh] text-gray-800 dark:text-gray-200"></div>
+      <div id="tasks" class="task-list space-y-[1vh]"></div>
       <div class="flex space-x-[1vw] mt-[2vh]">
-        <button class="retake-btn w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-[1rem] sm:text-[1.1rem]" id="settings-btn" aria-label="Open settings">Settings</button>
-        <button class="w-full py-[1vh] bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-[1rem] sm:text-[1.1rem]" id="sign-out-btn" aria-label="Sign out">Sign Out</button>
+        <button id="settings-btn" class="w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600">Settings</button>
+        <button id="sign-out-btn" class="w-full py-[1vh] bg-red-500 text-white rounded-lg hover:bg-red-600">Sign Out</button>
       </div>
     </div>
+
+    <!-- Settings Modal -->
     <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal">
       <div class="bg-white p-[4vw] rounded-xl w-[80vw] max-w-[400px] dark:bg-gray-800">
         <h2 class="text-[1.2rem] font-semibold mb-[2vh] text-gray-800 dark:text-gray-200">Settings</h2>
         <div class="flex items-center justify-between mb-[2vh]">
           <label class="text-[1rem] text-gray-700 dark:text-gray-300">Dark Mode</label>
-          <input type="checkbox" id="darkModeToggle" class="w-[4vw] h-[4vw] min-w-[16px] min-h-[16px]" aria-label="Toggle dark mode">
+          <input type="checkbox" id="darkModeToggle" class="w-[4vw] h-[4vw] min-w-[16px] min-h-[16px]" />
         </div>
-        <button class="w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-[1rem]" id="retake-btn" aria-label="Retake quiz">Retake Quiz</button>
-        <button class="w-full py-[1vh] mt-[1vh] bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-[1rem]" id="close-settings-btn" aria-label="Close settings">Close</button>
+        <button id="retake-btn" class="w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600">Retake Quiz</button>
+        <button id="close-settings-btn" class="w-full py-[1vh] mt-[1vh] bg-gray-500 text-white rounded-lg hover:bg-gray-600">Close</button>
       </div>
     </div>
   </div>
+
+  <!-- Firebase + Main Script -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBlgQqPVQjAr_edKWGiVmS5hIGGCXRU9Vc",
+      authDomain: "website-login-8697b.firebaseapp.com",
+      projectId: "website-login-8697b",
+      storageBucket: "website-login-8697b.appspot.com",
+      messagingSenderId: "154630434494",
+      appId: "1:154630434494:web:6e51f148e5a5a6ff9938ef",
+      measurementId: "G-919YBWXJZH"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
   <script src="script.js"></script>
 </body>
 </html>
