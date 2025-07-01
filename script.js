@@ -29,11 +29,11 @@ const questions = [
 ];
 
 const tasks = [
-  "Try a 5-minute meditation to improve focus.",
-  "Use the Pomodoro technique: 25-minute work sessions with 5-minute breaks.",
-  "Organize your workspace to reduce distractions.",
-  "Write down tasks in a planner to stay on track.",
-  "Practice deep breathing when feeling restless."
+  { text: "Try a 5-minute meditation to improve focus.", completed: false },
+  { text: "Use the Pomodoro technique: 25-minute work sessions with 5-minute breaks.", completed: false },
+  { text: "Organize your workspace to reduce distractions.", completed: false },
+  { text: "Write down tasks in a planner to stay on track.", completed: false },
+  { text: "Practice deep breathing when feeling restless.", completed: false }
 ];
 
 window.onload = () => {
@@ -150,10 +150,27 @@ function startQuiz() {
   const scoreEl = document.getElementById("score");
   const xpLevelEl = document.getElementById("xpLevel");
   const xpProgressEl = document.getElementById("xpProgress");
+  const taskProgressEl = document.getElementById("taskProgress");
+  const taskProgressLabel = document.getElementById("taskProgressLabel");
   const tasksEl = document.getElementById("tasks");
   const quizSection = document.getElementById("quiz");
   const resultScreen = document.getElementById("result-screen");
   const loader = document.getElementById("loader");
+
+  // Load XP and task completion from local storage
+  let userXP = parseInt(localStorage.getItem("userXP")) || 0;
+  let completedTasks = JSON.parse(localStorage.getItem("completedTasks")) || Array(tasks.length).fill(false);
+
+  function saveProgress() {
+    localStorage.setItem("userXP", userXP);
+    localStorage.setItem("completedTasks", JSON.stringify(completedTasks));
+  }
+
+  function getLevel(xp) {
+    if (xp < 50) return `Level 1 (Beginner, ${xp}/50 XP)`;
+    if (xp < 100) return `Level 2 (Intermediate, ${xp}/100 XP)`;
+    return `Level 3 (Advanced, ${xp} XP)`;
+  }
 
   function loadQuestion() {
     loader.classList.add("hidden");
@@ -189,17 +206,46 @@ function startQuiz() {
     quizSection.classList.add("hidden");
     resultScreen.classList.remove("hidden");
     const percentage = (score / maxScore) * 100;
-    scoreEl.textContent = `Score: ${score}/${maxScore}`;
-    xpLevelEl.textContent = `Focus Level: ${getLevel(percentage)}`;
-    xpProgressEl.style.width = `${percentage}%`;
-    tasksEl.innerHTML = tasks.map(task => `<div class="task-item text-sm text-gray-700 dark:text-gray-300">${task}</div>`).join("");
+    scoreEl.textContent = `Quiz Score: ${score}/${maxScore}`;
+    xpLevelEl.textContent = getLevel(userXP);
+    xpProgressEl.style.width = `${Math.min((userXP % 50) / 50 * 100, 100)}%`;
+    const completedCount = completedTasks.filter(Boolean).length;
+    taskProgressLabel.textContent = `Tasks Completed: ${completedCount}/${tasks.length}`;
+    taskProgressEl.style.width = `${(completedCount / tasks.length) * 100}%`;
+    tasksEl.innerHTML = tasks.map((task, index) => `
+      <div class="task-item text-sm text-gray-700 dark:text-gray-300 flex items-center fade-in">
+        <input type="checkbox" ${completedTasks[index] ? "checked" : ""} data-index="${index}" class="mr-2 w-4 h-4" aria-label="Complete ${task.text}">
+        <span ${completedTasks[index] ? 'style="text-decoration: line-through;"' : ""}>${task.text}</span>
+      </div>
+    `).join("");
+
+    // Add event listeners for task checkboxes
+    tasksEl.querySelectorAll("input[type='checkbox']").forEach(checkbox => {
+      checkbox.addEventListener("change", (e) => {
+        const index = parseInt(e.target.dataset.index);
+        completedTasks[index] = e.target.checked;
+        if (e.target.checked) {
+          userXP += 10; // Award 10 XP per task
+          const partyPopper = document.createElement("div");
+          partyPopper.className = "party-popper";
+          partyPopper.textContent = "🎉";
+          partyPopper.style.left = `${Math.random() * 80 + 10}%`;
+          document.getElementById("app").appendChild(partyPopper);
+          setTimeout(() => partyPopper.remove(), 1000);
+        }
+        saveProgress();
+        showResult(); // Refresh results to update XP and progress
+      });
+    });
   }
 
-  function getLevel(percentage) {
-    if (percentage < 33) return "Beginner";
-    if (percentage < 66) return "Intermediate";
-    return "Advanced";
-  }
+  // Reset tasks on quiz retake
+  retakeBtn.onclick = () => {
+    completedTasks = Array(tasks.length).fill(false);
+    saveProgress();
+    startQuiz();
+    document.getElementById("settings-modal").classList.add("hidden");
+  };
 
   loadQuestion();
 }
