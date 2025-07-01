@@ -1,5 +1,5 @@
 module.exports = {
-       content: ['./index.html'],
-       theme: { extend: {} },
-       plugins: [],
-     };
+  content: ['./index.html'],
+  theme: { extend: {} },
+  plugins: [],
+};

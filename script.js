@@ -49,13 +49,11 @@ window.onload = () => {
   const closeSettingsBtn = document.getElementById("close-settings-btn");
   const darkModeToggle = document.getElementById("darkModeToggle");
 
-  // Show message
   const showMessage = (msg, isError = false) => {
     messageDiv.textContent = msg;
     messageDiv.style.color = isError ? "red" : "green";
   };
 
-  // Send Email Link
   sendLinkBtn.addEventListener("click", () => {
     const email = emailInput.value.trim();
     if (!email) return showMessage("Please enter your email.", true);
@@ -77,7 +75,6 @@ window.onload = () => {
       });
   });
 
-  // Sign in if returning from email
   if (auth.isSignInWithEmailLink(window.location.href)) {
     let email = window.localStorage.getItem("emailForSignIn");
     if (!email) {
@@ -86,7 +83,7 @@ window.onload = () => {
 
     auth
       .signInWithEmailLink(email, window.location.href)
-      .then((result) => {
+      .then(() => {
         window.localStorage.removeItem("emailForSignIn");
         authSection.classList.add("hidden");
         quizSection.classList.remove("hidden");
@@ -98,7 +95,6 @@ window.onload = () => {
       });
   }
 
-  // Handle authentication state
   auth.onAuthStateChanged(user => {
     if (user) {
       authSection.classList.add("hidden");
@@ -112,7 +108,6 @@ window.onload = () => {
     }
   });
 
-  // Handle sign-out
   signOutBtn.addEventListener("click", () => {
     auth.signOut()
       .then(() => {
@@ -126,7 +121,6 @@ window.onload = () => {
       });
   });
 
-  // Settings and dark mode
   settingsBtn.onclick = () => document.getElementById("settings-modal").classList.remove("hidden");
   closeSettingsBtn.onclick = () => document.getElementById("settings-modal").classList.add("hidden");
   retakeBtn.onclick = () => {
@@ -171,12 +165,18 @@ function startQuiz() {
     q.options.forEach((option, index) => {
       const btn = document.createElement("button");
       btn.textContent = option;
-      btn.className = "circle bg-blue-100 hover:bg-blue-200 text-sm p-2 rounded-lg";
+      btn.className = "circle bg-blue-100 hover:bg-blue-200 text-sm p-2 rounded-lg transition-colors duration-200";
       btn.onclick = () => {
         score += q.scores[index];
         currentQuestion++;
         if (currentQuestion < questions.length) {
           loadQuestion();
+          const partyPopper = document.createElement("div");
+          partyPopper.className = "party-popper";
+          partyPopper.textContent = "🎉";
+          partyPopper.style.left = `${Math.random() * 80 + 10}%`;
+          document.getElementById("app").appendChild(partyPopper);
+          setTimeout(() => partyPopper.remove(), 1000);
         } else {
           showResult();
         }
