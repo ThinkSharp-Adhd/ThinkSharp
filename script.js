@@ -124,11 +124,9 @@ window.onload = () => {
   settingsBtn.onclick = () => document.getElementById("settings-modal").classList.remove("hidden");
   closeSettingsBtn.onclick = () => document.getElementById("settings-modal").classList.add("hidden");
 
-  // Move retakeBtn.onclick to outer scope
+  // Handle retake quiz and reset tasks
   retakeBtn.onclick = () => {
-    // Reset tasks on retake
-    let completedTasks = Array(tasks.length).fill(false);
-    localStorage.setItem("completedTasks", JSON.stringify(completedTasks));
+    localStorage.setItem("completedTasks", JSON.stringify(Array(tasks.length).fill(false)));
     startQuiz();
     document.getElementById("settings-modal").classList.add("hidden");
   };
