@@ -3,86 +3,369 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="ThinkSharp - A Focus Quiz for ADHD Awareness and Self-Help">
-  <title>ThinkSharp: ADHD Focus Quiz</title>
-  <link rel="icon" href="favicon.ico" type="image/x-icon" />
-  <link rel="stylesheet" href="styles.css" />
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBlgQqPVQjAr_edKWGiVmS5hIGGCXRU9Vc",
-      authDomain: "website-login-8697b.firebaseapp.com",
-      projectId: "website-login-8697b",
-      storageBucket: "website-login-8697b.appspot.com",
-      messagingSenderId: "154630434494",
-      appId: "1:154630434494:web:6e51f148e5a5a6ff9938ef",
-      measurementId: "G-919YBWXJZH"
-    };
-    firebase.initializeApp(firebaseConfig);
-  </script>
+  <title>Minimalistic Productivity App</title>
+  <style>
+    /* Reset default styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      color: #333;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .dark body {
+      background-color: #333;
+      color: #f5f5f5;
+    }
+    #app {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s;
+    }
+    .dark #app {
+      background-color: #444;
+    }
+    nav {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+    nav button {
+      padding: 10px 20px;
+      border: 1px solid #ccc;
+      background-color: #f5f5f5;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .dark nav button {
+      background-color: #555;
+      color: #f5f5f5;
+      border-color: #666;
+    }
+    nav button:hover {
+      background-color: #e0e0e0;
+    }
+    .dark nav button:hover {
+      background-color: #666;
+    }
+    nav button.active {
+      background-color: #ccc;
+    }
+    .dark nav button.active {
+      background-color: #777;
+    }
+    .container {
+      display: none;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #fff;
+      transition: background-color 0.3s;
+    }
+    .dark .container {
+      background-color: #444;
+      border-color: #555;
+    }
+    .container.active {
+      display: block;
+    }
+    ul {
+      list-style: none;
+    }
+    li {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    li input[type="checkbox"] {
+      margin-right: 10px;
+    }
+    li span {
+      flex: 1;
+    }
+    li button {
+      margin-left: 10px;
+      padding: 5px 10px;
+      border: 1px solid #ccc;
+      background-color: #f5f5f5;
+      cursor: pointer;
+    }
+    .dark li button {
+      background-color: #555;
+      color: #f5f5f5;
+      border-color: #666;
+    }
+    li button:hover {
+      background-color: #e0e0e0;
+    }
+    .dark li button:hover {
+      background-color: #666;
+    }
+    form {
+      display: flex;
+      margin-top: 20px;
+    }
+    form input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px 0 0 4px;
+    }
+    form button {
+      padding: 10px 20px;
+      border: 1px solid #ccc;
+      background-color: #f5f5f5;
+      cursor: pointer;
+      border-radius: 0 4px 4px 0;
+    }
+    .dark form input[type="text"], .dark form button {
+      background-color: #555;
+      color: #f5f5f5;
+      border-color: #666;
+    }
+    form button:hover {
+      background-color: #e0e0e0;
+    }
+    .dark form button:hover {
+      background-color: #666;
+    }
+    #time-display {
+      font-size: 48px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    #timer-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    #timer-input {
+      width: 100px;
+      padding: 5px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    textarea {
+      width: 100%;
+      height: 300px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: none;
+    }
+    .dark textarea {
+      background-color: #555;
+      color: #f5f5f5;
+      border-color: #666;
+    }
+    /* Media queries for responsiveness */
+    @media (max-width: 600px) {
+      nav {
+        flex-direction: column;
+      }
+      nav button {
+        margin-bottom: 10px;
+      }
+      #app {
+        margin: 10px;
+        padding: 10px;
+      }
+      .container {
+        padding: 10px;
+      }
+      #time-display {
+        font-size: 36px;
+      }
+      textarea {
+        height: 200px;
+      }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center transition-colors duration-300" id="body">
-  <div id="app" class="w-[90vw] max-w-[600px] min-w-[300px] mx-auto p-[4vw] sm:p-[2vw] bg-white rounded-xl shadow-lg relative transition-colors duration-300">
-
-    <!-- Authentication -->
-    <div id="auth-section">
-      <h2 class="text-[1.5rem] font-semibold mb-[2vh] text-center text-gray-800 dark:text-gray-200">Sign In to Take the Quiz</h2>
-      <input id="email" type="email" class="w-full p-[0.5rem] mb-[1vh] border rounded text-[1rem] dark:bg-gray-700 dark:text-gray-200" placeholder="Enter your email" />
-      <button id="send-link" class="w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-[1rem]">Send Sign-In Link</button>
-      <div id="auth-message" class="mt-[1vh] text-center text-[0.9rem] text-gray-600 dark:text-gray-400"></div>
+<body>
+  <div id="app">
+    <nav>
+      <button id="todo-btn" class="active">To-Do List</button>
+      <button id="timer-btn">Timer</button>
+      <button id="notes-btn">Notes</button>
+      <button id="settings-btn">Settings</button>
+    </nav>
+    <div id="todo-container" class="container active">
+      <ul id="task-list"></ul>
+      <form id="add-task-form">
+        <input type="text" id="new-task" placeholder="Add a new task" />
+        <button type="submit">Add Task</button>
+      </form>
     </div>
-
-    <!-- Loader -->
-    <div id="loader" class="flex justify-center items-center h-[40vh] sm:h-[30vh] hidden">
-      <div class="flex space-x-[1vw]">
-        <div class="w-[2vw] h-[2vw] bg-blue-500 rounded-full loader-dot" style="--i: 0;"></div>
-        <div class="w-[2vw] h-[2vw] bg-blue-500 rounded-full loader-dot" style="--i: 1;"></div>
-        <div class="w-[2vw] h-[2vw] bg-blue-500 rounded-full loader-dot" style="--i: 2;"></div>
-      </div>
-    </div>
-
-    <!-- Quiz -->
-    <div id="quiz" class="hidden">
-      <div id="question" class="text-[1.2rem] font-semibold text-center mb-[2vh] text-gray-800 dark:text-gray-200">Loading...</div>
-      <div id="options" class="flex flex-wrap justify-between gap-[1vw] mb-[2vh]"></div>
-      <div class="labels flex justify-between text-sm text-gray-600 dark:text-gray-400">
-        <span>Never</span><span>Rarely</span><span>Sometimes</span><span>Often</span><span>Always</span>
+    <div id="timer-container" class="container">
+      <input type="number" id="timer-input" value="25" min="1" /> minutes
+      <div id="time-display">25:00</div>
+      <div id="timer-controls">
+        <button id="start-btn">Start</button>
+        <button id="pause-btn">Pause</button>
+        <button id="reset-btn">Reset</button>
       </div>
     </div>
-
-    <!-- Results -->
-    <div id="result-screen" class="hidden">
-      <div id="xpLevel" class="text-lg font-semibold text-center mb-2 text-gray-800 dark:text-gray-200"></div>
-      <div class="progress-bar-container w-full bg-gray-200 rounded-full mb-4 dark:bg-gray-700">
-        <div id="xpProgress" class="progress-bar rounded-full"></div>
-      </div>
-      <div id="score" class="text-2xl font-bold text-center mb-4 text-gray-800 dark:text-gray-200"></div>
-      <div id="tasks" class="task-list space-y-2"></div>
-      <div class="flex space-x-2 mt-4">
-        <button id="settings-btn" class="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Settings</button>
-        <button id="sign-out-btn" class="w-full py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">Sign Out</button>
-      </div>
+    <div id="notes-container" class="container">
+      <textarea id="notes-textarea" placeholder="Write your notes here..."></textarea>
     </div>
-
-    <!-- Settings Modal -->
-    <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal">
-      <div class="bg-white p-6 rounded-xl w-[80vw] max-w-[400px] dark:bg-gray-800">
-        <h2 class="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Settings</h2>
-        <div class="flex items-center justify-between mb-4">
-          <label class="text-gray-700 dark:text-gray-300">Dark Mode</label>
-          <input type="checkbox" id="darkModeToggle" class="w-5 h-5">
-        </div>
-        <button id="retake-btn" class="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Retake Quiz</button>
-        <button id="close-settings-btn" class="w-full py-2 mt-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">Close</button>
-      </div>
+    <div id="settings-modal" class="container" style="display: none;">
+      <h2>Settings</h2>
+      <label>
+        <input type="checkbox" id="darkModeToggle" />
+        Dark Mode
+      </label>
+      <button id="close-settings-btn">Close</button>
     </div>
   </div>
+  <script>
+    // Navigation
+    const navButtons = document.querySelectorAll('nav button');
+    const containers = document.querySelectorAll('.container');
+    navButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        navButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        containers.forEach(container => container.classList.remove('active'));
+        const target = button.id.replace('-btn', '-container');
+        document.getElementById(target).classList.add('active');
+      });
+    });
 
-  <!-- Main Script -->
-  <script src="script.js"></script>
+    // To-Do List
+    const taskList = document.getElementById('task-list');
+    const addTaskForm = document.getElementById('add-task-form');
+    const newTaskInput = document.getElementById('new-task');
+
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+    function renderTasks() {
+      taskList.innerHTML = '';
+      tasks.forEach((task, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <input type="checkbox" ${task.done ? 'checked' : ''} />
+          <span style="${task.done ? 'text-decoration: line-through;' : ''}">${task.text}</span>
+          <button>Delete</button>
+        `;
+        li.querySelector('input').addEventListener('change', () => {
+          tasks[index].done = !tasks[index].done;
+          saveTasks();
+          renderTasks();
+        });
+        li.querySelector('button').addEventListener('click', () => {
+          tasks.splice(index, 1);
+          saveTasks();
+          renderTasks();
+        });
+        taskList.appendChild(li);
+      });
+    }
+
+    function saveTasks() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    addTaskForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = newTaskInput.value.trim();
+      if (text) {
+        tasks.push({ text, done: false });
+        saveTasks();
+        renderTasks();
+        newTaskInput.value = '';
+      }
+    });
+
+    renderTasks();
+
+    // Timer
+    const timerInput = document.getElementById('timer-input');
+    const timeDisplay = document.getElementById('time-display');
+    const startBtn = document.getElementById('start-btn');
+    const pauseBtn = document.getElementById('pause-btn');
+    const resetBtn = document.getElementById('reset-btn');
+
+    let timerInterval;
+    let timeLeft;
+
+    function updateDisplay() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      timeDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (timeLeft > 0) {
+          timeLeft--;
+          updateDisplay();
+        } else {
+          clearInterval(timerInterval);
+          alert('Time is up!');
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      clearInterval(timerInterval);
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timeLeft = parseInt(timerInput.value) * 60;
+      updateDisplay();
+    }
+
+    startBtn.addEventListener('click', startTimer);
+    pauseBtn.addEventListener('click', pauseTimer);
+    resetBtn.addEventListener('click', resetTimer);
+
+    timerInput.addEventListener('change', resetTimer);
+
+    // Initialize timer
+    timeLeft = parseInt(timerInput.value) * 60;
+    updateDisplay();
+
+    // Notes
+    const notesTextarea = document.getElementById('notes-textarea');
+    notesTextarea.value = localStorage.getItem('notes') || '';
+    notesTextarea.addEventListener('input', () => {
+      localStorage.setItem('notes', notesTextarea.value);
+    });
+
+    // Settings
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsModal = document.getElementById('settings-modal');
+    const closeSettingsBtn = document.getElementById('close-settings-btn');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+
+    settingsBtn.addEventListener('click', () => {
+      settingsModal.style.display = 'block';
+    });
+
+    closeSettingsBtn.addEventListener('click', () => {
+      settingsModal.style.display = 'none';
+    });
+
+    darkModeToggle.addEventListener('change', () => {
+      document.body.classList.toggle('dark', darkModeToggle.checked);
+      localStorage.setItem('darkMode', darkModeToggle.checked);
+    });
+
+    if (12.getItem('darkMode') === 'true') {
+      darkModeToggle.checked = true;
+      document.body.classList.add('dark');
+    }
+  </script>
 </body>
 </html>
