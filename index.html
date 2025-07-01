@@ -25,7 +25,7 @@
     firebase.initializeApp(firebaseConfig);
   </script>
 </head>
-<body class="bg-gray-100 min-h-[100vh] flex items-center justify-center transition-colors duration-300" id="body">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center transition-colors duration-300" id="body">
   <div id="app" class="w-[90vw] max-w-[600px] min-w-[300px] mx-auto p-[4vw] sm:p-[2vw] bg-white rounded-xl shadow-lg relative transition-colors duration-300">
 
     <!-- Authentication -->
@@ -46,40 +46,38 @@
     </div>
 
     <!-- Quiz -->
-    <div id="quiz" class="quiz-container hidden">
-      <div id="question" class="question text-[1.2rem] sm:text-[1.5rem] font-semibold text-gray-800 mb-[2vh] text-center dark:text-gray-200">
-        <p>Loading...</p>
-      </div>
-      <div id="options" class="options flex flex-wrap justify-between gap-[1vw] mb-[2vh]"></div>
-      <div class="labels flex justify-between text-[0.8rem] text-gray-600 dark:text-gray-400">
+    <div id="quiz" class="hidden">
+      <div id="question" class="text-[1.2rem] font-semibold text-center mb-[2vh] text-gray-800 dark:text-gray-200">Loading...</div>
+      <div id="options" class="flex flex-wrap justify-between gap-[1vw] mb-[2vh]"></div>
+      <div class="labels flex justify-between text-sm text-gray-600 dark:text-gray-400">
         <span>Never</span><span>Rarely</span><span>Sometimes</span><span>Often</span><span>Always</span>
       </div>
     </div>
 
     <!-- Results -->
     <div id="result-screen" class="hidden">
-      <div id="xpLevel" class="text-[1.2rem] font-semibold text-center mb-[1vh] text-gray-800 dark:text-gray-200"></div>
-      <div class="progress-bar-container w-full bg-gray-200 rounded-full mb-[2vh] dark:bg-gray-700">
+      <div id="xpLevel" class="text-lg font-semibold text-center mb-2 text-gray-800 dark:text-gray-200"></div>
+      <div class="progress-bar-container w-full bg-gray-200 rounded-full mb-4 dark:bg-gray-700">
         <div id="xpProgress" class="progress-bar rounded-full"></div>
       </div>
-      <div id="score" class="text-[2rem] font-bold text-center mb-[2vh] text-gray-800 dark:text-gray-200"></div>
-      <div id="tasks" class="task-list space-y-[1vh]"></div>
-      <div class="flex space-x-[1vw] mt-[2vh]">
-        <button id="settings-btn" class="w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600">Settings</button>
-        <button id="sign-out-btn" class="w-full py-[1vh] bg-red-500 text-white rounded-lg hover:bg-red-600">Sign Out</button>
+      <div id="score" class="text-2xl font-bold text-center mb-4 text-gray-800 dark:text-gray-200"></div>
+      <div id="tasks" class="task-list space-y-2"></div>
+      <div class="flex space-x-2 mt-4">
+        <button id="settings-btn" class="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Settings</button>
+        <button id="sign-out-btn" class="w-full py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">Sign Out</button>
       </div>
     </div>
 
     <!-- Settings Modal -->
     <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal">
-      <div class="bg-white p-[4vw] rounded-xl w-[80vw] max-w-[400px] dark:bg-gray-800">
-        <h2 class="text-[1.2rem] font-semibold mb-[2vh] text-gray-800 dark:text-gray-200">Settings</h2>
-        <div class="flex items-center justify-between mb-[2vh]">
-          <label class="text-[1rem] text-gray-700 dark:text-gray-300">Dark Mode</label>
-          <input type="checkbox" id="darkModeToggle" class="w-[4vw] h-[4vw] min-w-[16px] min-h-[16px]" />
+      <div class="bg-white p-6 rounded-xl w-[80vw] max-w-[400px] dark:bg-gray-800">
+        <h2 class="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Settings</h2>
+        <div class="flex items-center justify-between mb-4">
+          <label class="text-gray-700 dark:text-gray-300">Dark Mode</label>
+          <input type="checkbox" id="darkModeToggle" class="w-5 h-5">
         </div>
-        <button id="retake-btn" class="w-full py-[1vh] bg-blue-500 text-white rounded-lg hover:bg-blue-600">Retake Quiz</button>
-        <button id="close-settings-btn" class="w-full py-[1vh] mt-[1vh] bg-gray-500 text-white rounded-lg hover:bg-gray-600">Close</button>
+        <button id="retake-btn" class="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Retake Quiz</button>
+        <button id="close-settings-btn" class="w-full py-2 mt-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">Close</button>
       </div>
     </div>
   </div>
